@@ -58,5 +58,3 @@ export const observableArray = <T>(base: T[]): BasicSignal<T[]> => {
     }
 }
 
-// @ts-ignore
-window.observableArray = observableArray
