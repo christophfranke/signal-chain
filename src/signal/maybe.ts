@@ -3,7 +3,7 @@ import { Maybe, Function1, Chain, NextFn } from './types'
 import { isNotNothing } from './assert'
 import { key } from './object'
 
-interface MaybeKeyCall {
+export interface MaybeKeyCall {
   <O extends Object, Key extends keyof O>(keyOf: Key): Chain<undefined, undefined>
   <O extends Object, Key extends keyof O>(keyOf: Key): Chain<null, null>
   <O extends Object, Key extends keyof O>(keyOf: Key): Chain<O | undefined, O[Key] | undefined>

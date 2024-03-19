@@ -2,7 +2,7 @@ import { Chain } from './types'
 import { chain } from './chain'
 import { through } from './tools'
 
-interface CatchCall {
+export interface CatchCall {
     <V>(listen: Chain<V, V>): Chain<V | Error, V>
     <V1, V2>(listen: Chain<V1, V2>): Chain<V1, V2 | Error>
     <V1, V2, V3>(listen: Chain<V1, V2>, listen2: Chain<V2, V3>): Chain<V1, V3 | Error>

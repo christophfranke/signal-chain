@@ -1,7 +1,7 @@
 import { CleanupExec, Chain } from './types'
 import { execute } from './util'
 
-interface HasAddEventListener {
+export interface HasAddEventListener {
     addEventListener(event: string, listener: (event: Event) => void): void
 }
 

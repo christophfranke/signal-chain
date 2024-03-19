@@ -1,19 +1,27 @@
 {
-  "name": "signal-chain",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "test": "vitest"
-  },
-  "devDependencies": {
-    "typescript": "^5.2.2",
-    "vite": "^5.1.6"
-  },
-  "dependencies": {
-    "vitest": "^1.4.0"
-  }
+    "name": "signal-chain",
+    "author": "Christoph Franke",
+    "description": "Declarative reactive programming library",
+    "license": "MIT",
+    "keywords": [
+        "signal",
+        "declarative",
+        "reactive",
+        "chain"
+    ],
+    "main": "dist/signal-ts.js",
+    "types": "dist/signal-ts.d.ts",
+    "type": "module",
+    "scripts": {
+        "build": "tsc",
+        "test": "vitest"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/christophfranke/signal-chain.git"
+    },
+    "devDependencies": {
+        "typescript": "^5.2.2",
+        "vitest": "^1.4.0"
+    }
 }

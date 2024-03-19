@@ -1,7 +1,7 @@
 import { Chain, NextFn, Context } from "./types"
 import { chain } from './chain'
 
-interface AssertCall<Range, Condition extends Range> {
+export interface AssertCall<Range, Condition extends Range> {
     <V extends Range>(): Chain<V, Condition>
     <V1 extends Range, InnerFrom extends Condition & V1, V2>(element1: Chain<InnerFrom, V2>): Chain<V1 | InnerFrom, V2 | Exclude<V1, InnerFrom>>
     <V1 extends Range, Innerfrom extends Condition & V1, V2, V3>(element1: Chain<Innerfrom, V2>, element2: Chain<V2, V3>): Chain<V1 | Innerfrom, V3 | Exclude<V1, Innerfrom>>
@@ -40,7 +40,7 @@ export const assert = <Range, Condition extends Range>(condition: ConditionFunct
 }
 
 
-interface AssertNotCall<Range, Condition extends Range> {
+export interface AssertNotCall<Range, Condition extends Range> {
     <V extends Range>(): Chain<V, Exclude<V, Condition>>
     <V1 extends Range, InnerFrom extends Exclude<V1, Condition>, V2>(element1: Chain<InnerFrom, V2>): Chain<V1 | InnerFrom, V2 | Exclude<V1, InnerFrom>>
     <V1 extends Range, InnerFrom extends Exclude<V1, Condition>, V2, V3>(element1: Chain<InnerFrom, V2>, element2: Chain<V2, V3>): Chain<V1 | InnerFrom, V3 | Exclude<V1, InnerFrom>>

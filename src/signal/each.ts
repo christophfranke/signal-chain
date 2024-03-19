@@ -3,7 +3,7 @@ import { chain } from './chain'
 import { through } from './tools'
 import { execute } from './util'
 
-interface EachCall {
+export interface EachCall {
   <V>(): Chain<V[]>
   <V1, V2>(element1: Chain<V1, V2>): Chain<V1[], V2[]>
   <V1, V2, V3>(element1: Chain<V1, V2>, element2: Chain<V2, V3>): Chain<V1[], V3[]>

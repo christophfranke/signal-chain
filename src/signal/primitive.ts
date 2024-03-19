@@ -4,7 +4,7 @@ import { execute } from './util'
 
 const ASYNC_UPDATES = true
 
-interface ConnectCall {
+export interface ConnectCall {
   <V1, V2>(element1: Chain<V1, V2>): BasicComputed<V2>
   <V1, V2, V3>(element1: Chain<V1, V2>, element2: Chain<V2, V3>): BasicComputed<V3>
   <V1, V2, V3, V4>(element1: Chain<V1, V2>, element2: Chain<V2, V3>, element3: Chain<V3, V4>): BasicComputed<V4>

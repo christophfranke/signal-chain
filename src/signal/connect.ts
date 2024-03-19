@@ -1,9 +1,8 @@
-import type { FunctionVoid } from "util/types"
-import type { Chain, CleanupExec } from "./types"
+import type { Chain, CleanupExec, FunctionVoid } from "./types"
 import { chain } from "./chain"
 import { execute } from "./util"
 
-interface ConnectCall {
+export interface ConnectCall {
     <V1, V2>(element1: Chain<V1, V2>): FunctionVoid
     <V1, V2, V3>(element1: Chain<V1, V2>, element2: Chain<V2, V3>): FunctionVoid
     <V1, V2, V3, V4>(element1: Chain<V1, V2>, element2: Chain<V2, V3>, element3: Chain<V3, V4>): FunctionVoid
@@ -33,7 +32,7 @@ export const connect: ConnectCall = (listen1: Chain<any, any>, ...additionalList
     return () => { execute(unsubscribe, true) }
 }
 
-interface EvaluateCall {
+export interface EvaluateCall {
     <V1, V2>(element1: Chain<V1, V2>): V2 | Error
     <V1, V2, V3>(element1: Chain<V1, V2>, element2: Chain<V2, V3>): V3 | Error
     <V1, V2, V3, V4>(element1: Chain<V1, V2>, element2: Chain<V2, V3>, element3: Chain<V3, V4>): V4 | Error
@@ -69,7 +68,7 @@ export const evaluate: EvaluateCall = (listen1: Chain<any, any>, ...additionalLi
     return currentValue
 }
 
-interface FirstValueCall {
+export interface FirstValueCall {
     <V1, V2>(element1: Chain<V1, V2>): Promise<V2>
     <V1, V2, V3>(element1: Chain<V1, V2>, element2: Chain<V2, V3>): Promise<V3>
     <V1, V2, V3, V4>(element1: Chain<V1, V2>, element2: Chain<V2, V3>, element3: Chain<V3, V4>): Promise<V4>

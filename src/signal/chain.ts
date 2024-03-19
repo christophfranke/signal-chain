@@ -1,6 +1,6 @@
 import type { Chain, ConnectedChain, NextFn } from './types'
 
-interface ChainCall {
+export interface ChainCall {
   <V1, V2>(element1: Chain<V1, V2>): Chain<V1, V2>
   <V1, V2, V3>(element1: Chain<V1, V2>, element2: Chain<V2, V3>): Chain<V1, V3>
   <V1, V2, V3, V4>(element1: Chain<V1, V2>, element2: Chain<V2, V3>, element3: Chain<V3, V4>): Chain<V1, V4>
@@ -52,7 +52,7 @@ export const chain: ChainCall = (
 
 
 
-interface SideChainCall {
+export interface SideChainCall {
   <V1, V2>(element1: Chain<V1, V2>): Chain<V1, [V1, V2]>
   <V1, V2, V3>(element1: Chain<V1, V2>, element2: Chain<V2, V3>): Chain<V1, [V1, V3]>
   <V1, V2, V3, V4>(element1: Chain<V1, V2>, element2: Chain<V2, V3>, element3: Chain<V3, V4>): Chain<V1, [V1, V4]>

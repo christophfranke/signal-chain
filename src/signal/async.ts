@@ -4,7 +4,7 @@ import { chain } from './chain'
 import { execute } from './util'
 
 
-interface AwaitCall {
+export interface AwaitCall {
     <V1, V2>(listen1: Chain<V1, Promise<V2>>): Chain<V1, V2 | Error>
     <V1, V2, V3>(listen1: Chain<V1, V2>, listen2: Chain<V2, Promise<V3>>): Chain<V1, V3 | Error>
     <V1, V2, V3, V4>(listen1: Chain<V1, V2>, listen2: Chain<V2, V3>, listen3: Chain<V3, Promise<V4>>): Chain<V1, V4 | Error>
