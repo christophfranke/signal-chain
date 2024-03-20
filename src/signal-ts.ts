@@ -1,6 +1,6 @@
 export * from './signal/types'
 
-import { emit, select, stopIf, stop, passIf, count } from './signal/tools'
+import { emit, select, stopIf, stop, passIf, passUnique, count } from './signal/tools'
 import { chain, sidechain } from './signal/chain'
 import { connect as connectPrimitive, create as createPrimitive } from './signal/primitive'
 import { key } from './signal/object'
@@ -130,10 +130,10 @@ export default {
   buffer,
   window,
   sidechain,
+  passUnique,
   // missing:
   // debounce
   // throttle
   // interval
-  // passIfChanged
 }
 

@@ -1,8 +1,12 @@
 {
     "name": "signal-chain",
+    "version": "0.1.0",
     "author": "Christoph Franke",
     "description": "Declarative reactive programming library",
     "license": "MIT",
+    "files": [
+        "dist"
+    ],
     "keywords": [
         "signal",
         "declarative",
@@ -14,7 +18,8 @@
     "type": "module",
     "scripts": {
         "build": "tsc",
-        "test": "vitest"
+        "test:watch": "vitest",
+        "test": "tsc -p tsconfig.test.json && vitest run"
     },
     "repository": {
         "type": "git",

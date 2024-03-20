@@ -2,7 +2,15 @@ import type { NextFn, ListenerDescription, CleanupExec, BasicSignal, BasicComput
 import { chain } from './chain'
 import { execute } from './util'
 
-const ASYNC_UPDATES = true
+type UpdateMethods = 'microtask' | 'timeout' | 'immediate'
+const UPDATE_METHOD = 'microtask' as UpdateMethods
+
+type BatchMethods = 'none' | 'assignment' | 'all'
+const BATCHING = 'assignment' as BatchMethods
+
+if (UPDATE_METHOD === 'immediate' && BATCHING != 'none') {
+  throw new Error('Cannot batch updates with immediate update method')
+}
 
 export interface ConnectCall {
   <V1, V2>(element1: Chain<V1, V2>): BasicComputed<V2>
@@ -65,6 +73,7 @@ export const connect: ConnectCall = (listen1: Chain<any, any>, ...additionalList
 
 export const create = <V>(initialValue: V): BasicSignal<V> => {
   let disconnected = false
+  let queuedUpdate = 0
   let currentValue = initialValue
   let listeners: ListenerDescription<V>[] = []
 
@@ -86,23 +95,43 @@ export const create = <V>(initialValue: V): BasicSignal<V> => {
     }
   }
 
-  const update = (newValue: V) => {
-    if (disconnected) {
-      return
+  const setValue = (newValue: V) => {
+    if (!disconnected) {
+      currentValue = newValue
     }
-    currentValue = newValue
-    if (ASYNC_UPDATES) {
-      queueMicrotask(() => {
-        listeners.forEach(listener => {
-          execute(listener.cleanup)
-          listener.cleanup = listener.fn(currentValue)
+  }
+
+  const applyListeners = () => {
+    listeners.forEach(listener => {
+      execute(listener.cleanup)
+      listener.cleanup = listener.fn(currentValue)
+    })
+  }
+
+  const update = () => {
+    switch(UPDATE_METHOD) {
+      case 'immediate':
+        applyListeners()
+        break
+      case 'microtask':
+        queuedUpdate++
+        queueMicrotask(() => {
+          queuedUpdate--
+          applyListeners()
         })
-      })
-    } else {
-      listeners.forEach(listener => {
-        execute(listener.cleanup)
-        listener.cleanup = listener.fn(currentValue)
-      })
+        break
+      case 'timeout':
+        if (queuedUpdate === 0) {
+          queuedUpdate++
+          setTimeout(() => {
+            queuedUpdate--
+            applyListeners()
+          })
+        }
+        break
+      default:
+        let x: never = UPDATE_METHOD
+        throw new Error(`Unknown update method: ${x}`)
     }
   }
 
@@ -118,13 +147,21 @@ export const create = <V>(initialValue: V): BasicSignal<V> => {
 
   return {
     listen,
-    update,
+    update: (value: V) => {
+      setValue(value)
+      if (queuedUpdate === 0 || BATCHING != 'all') {
+        update()
+      }
+    },
     disconnect,
     get value() {
       return currentValue
     },
     set value(value) {
-      update(value)
+      setValue(value)
+      if (queuedUpdate === 0 || BATCHING === 'none') {
+        update()
+      }
     }
   }
 }

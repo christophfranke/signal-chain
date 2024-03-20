@@ -29,6 +29,16 @@ export function stopIf<V>(condition: Function1<V, boolean>): Chain<V> {
   }
 }
 
+export function passUnique<V>(): Chain<V> {
+  return (next: NextFn<V>, parameter: V, context) => {
+    if (context.last !== parameter) {
+      context.last = parameter
+
+      return next(parameter)
+    }
+  }
+}
+
 export function stop<V>(): Chain<V, never> {
   return () => {}
 }

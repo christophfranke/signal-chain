@@ -1,4 +1,4 @@
-import $ from './signal-ts'
+import $ from '../src/signal-ts'
 import { describe, it, expect } from 'vitest'
 
 describe('Counter application', () => {
