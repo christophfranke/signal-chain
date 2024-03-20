@@ -12,6 +12,7 @@
         "signal",
         "declarative",
         "reactive",
+        "state",
         "chain"
     ],
     "main": "dist/signal-ts.js",
