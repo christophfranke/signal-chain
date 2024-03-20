@@ -201,5 +201,5 @@ This is a very new library and there is no guarantee that the API is stable. Ple
 
 - When listening to an object key, and the key had an array type, but is now being assigned a non-array, the application throws an error unsupported.
 - Options and behaviour of update batching and async updates is not stable yet. There are several options and there will be a way to turn on/off batching and asnyc, the default configuration may change though.
-- `$.if`, `$.ifNot` are not implemented yet, but will be soon.
+- `$.if`, `$.ifNot` are not implemented yet.
 
