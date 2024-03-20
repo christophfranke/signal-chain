@@ -42,47 +42,53 @@ To start using **signal-chain** in your projects, follow these steps:
    ```typescript
    import $ from 'signal-chain'
    
-   const counter = $.primitive.create(0)
+   const counter = $.primitive.create(0) // creates a reactive primitive, like a ref or a signal
+
+   // chains are the core of signal-chain, they define a series of operations
    const format = $.chain(
       $.select(x => Math.round(x)),
-      $.select(x => `The number is ${x}`),
+      $.select(x => `The number is ${x}`), // select is like map, but with a more distinctive name
    )
 
    const invert = $.chain(
       $.select(x => -x),
    )
 
+   // for a chain to become active, it needs to be connected
    const disconnect = $.connect(
-      counter.listen,
+      counter.listen, // listen to changes in counter
       invert,
       format,
-      $.effect(result => console.log(result)) // The number is 0
+      $.effect(result => console.log(result)) // log: The number is 0
    )
 
-   counter.value = 10 // The number is -10
+   counter.value = 10 // log: The number is -10
 
 
-   // and a more real world scenario
-   type ResponseJSON = { ... }
-   const endpoint = $.primitive.create<string | undefined>(undefined)
+   // a bit more real world scenario:
+   // let's say we want to fetch some user data from an API
+   // and whenever the user changes, we need to fetch new data
+   type UserJSON = { ... }
+   const user = $.primitive.create<string | undefined>(undefined)
    const data = $.primitive.connect(
       endpoint.listen,
       $.assert.isNothing( // nothing catches null | undefined
-         $.emit('/') // default to root
+         $.emit('guest')
       ),
+      $.select(user => `/api/user/${user.toLowerCase()}`),
       $.await.latest( // await.latest ensures that only the latest request result is being passed on
-         $.select(url => fetch(url).then(response => response.json()) as Promise<ResponseJSON>),
+         $.select(url => fetch(url).then(response => response.json()) as Promise<UserJSON>),
       ),
       $.assert.isError( // when a promise rejects, its result will be an error
          $.effect(err => console.error('Error fetching data:', err)),
          $.stop()
       ),
-      // strong type inferrence: the error has been asserted for, so the result must be a ResponseJSON
+      // strong type inferrence: the error has been asserted for, so the result must be a UserJSON
       $.log('Data fetched:')
    )
 
-   endpoint.value = '/api/endpoint1' // Data fetched: { ... }
-   data.value // holds fetched data, type ResponseJSON inferred
+   user.value = 'Detlev' // logs: Data fetched: { ... }
+   data.value // everything we know about Detlev, type UserJSON is inferred
 
    ```
 
