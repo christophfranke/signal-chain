@@ -65,24 +65,25 @@ To start using **signal-chain** in your projects, follow these steps:
    counter.value = 10 // log: The number is -10
    ```
 
-3. **A bit more real world scenario**
+3. **A bit more real world scenario**:
+
    Let's say we want to fetch some user data from an API and whenever the user changes, we need to fetch new data
 
    ```typescript
    type UserJSON = { ... }
-   const user = $.primitive.create<string | undefined>(undefined)
+   const user = $.primitive.create<string | undefined>(undefined) // this is our current user
    const data = $.primitive.connect(
       endpoint.listen,
       $.assert.isNothing( // nothing catches null | undefined
-         $.emit('guest')
+         $.emit('guest') // default to guest
       ),
-      $.select(user => `/api/user/${user.toLowerCase()}`),
+      $.select(user => `/api/user/${user.toLowerCase()}`), // create the url
       $.await.latest( // await.latest ensures that only the latest request result is being passed on
          $.select(url => fetch(url).then(response => response.json()) as Promise<UserJSON>),
       ),
       $.assert.isError( // when a promise rejects, its result will be an error
          $.effect(err => console.error('Error fetching data:', err)),
-         $.stop()
+         $.stop() // we have no data, so we stop processing
       ),
       // strong type inferrence: the error has been asserted for, so the result must be a UserJSON
       $.log('Data fetched:')
