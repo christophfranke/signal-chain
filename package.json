@@ -4,6 +4,7 @@
     "author": "Christoph Franke",
     "description": "Declarative reactive programming library",
     "license": "MIT",
+    "sideEffects": false,
     "files": [
         "dist"
     ],
