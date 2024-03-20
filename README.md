@@ -65,8 +65,8 @@ To start using **signal-chain** in your projects, follow these steps:
    counter.value = 10 // log: The number is -10
    ```
 
-**A bit more real world scenario**
-Let's say we want to fetch some user data from an API and whenever the user changes, we need to fetch new data
+3. **A bit more real world scenario**
+   Let's say we want to fetch some user data from an API and whenever the user changes, we need to fetch new data
 
    ```typescript
    type UserJSON = { ... }
