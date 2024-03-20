@@ -71,17 +71,22 @@ To start using **signal-chain** in your projects, follow these steps:
 
    ```typescript
    type UserJSON = { ... }
-   const user = $.primitive.create<string | undefined>(undefined) // this is our current user
-   const data = $.primitive.connect(
-      endpoint.listen,
+
+   // here we save the user name
+   const user = $.primitive.create<string | undefined>(undefined) // initialized with undefined
+
+
+   // here we define the data fetching chain
+   const data = $.primitive.connect( // connect will run eager and start executing synchronously
+      user.listen, // listen to changes to the user
       $.assert.isNothing( // nothing catches null | undefined
          $.emit('guest') // default to guest
       ),
       $.select(user => `/api/user/${user.toLowerCase()}`), // create the url
-      $.await.latest( // await.latest ensures that only the latest request result is being passed on
+      $.await.latest( // await.latest ensures that only the latest resolve is being passed on
          $.select(url => fetch(url).then(response => response.json()) as Promise<UserJSON>),
       ),
-      $.assert.isError( // when a promise rejects, its result will be an error
+      $.assert.isError( // when a promise rejects, its result will be an Error
          $.effect(err => console.error('Error fetching data:', err)),
          $.stop() // we have no data, so we stop processing
       ),
@@ -89,6 +94,7 @@ To start using **signal-chain** in your projects, follow these steps:
       $.log('Data fetched:')
    )
 
+   // now we set the user name, which will trigger data fetching
    user.value = 'Detlev' // logs: Data fetched: { ... }
    data.value // everything we know about Detlev, type UserJSON is inferred
 
