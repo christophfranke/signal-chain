@@ -38,7 +38,7 @@ To start using **signal-chain** in your projects, follow these steps:
    npm install signal-chain
    ```
 
-2. **Basic Usage**:
+2. **Using Primitives**:
    ```typescript
    import $ from 'signal-chain'
 
@@ -67,11 +67,13 @@ To start using **signal-chain** in your projects, follow these steps:
    counter.value = 10 // log: The number is -10
    ```
 
-3. **A bit more real world scenario**:
+3. **Reactive Data Fetching**:
 
    Let's say we want to fetch some user data from an API and whenever the user changes, we need to fetch new data
 
    ```typescript
+   import $ from 'signal-chain'
+
    type UserJSON = { ... }
 
    // here we save the user name
@@ -107,7 +109,77 @@ To start using **signal-chain** in your projects, follow these steps:
    // now we set the user name, which will trigger data fetching
    user.value = 'Detlev' // logs: Data fetched: { ... }
    data.value // everything we know about Detlev, type UserJSON is inferred
+   ```
 
+4. **Reactive State Management**:
+   ```typescript
+   import $ from 'signal-chain'
+
+   // this is just a plan javascript object
+   const user = {
+      meta: {
+         profil: '/default.png',
+         loggedIn: false,
+         comments: []
+      },
+      name: 'guest'
+   }
+
+   // clicking the logout button will logout the user
+   document.getElementById('logout')?.addEventListener('click', () => {
+      user.name = 'guest'
+      user.meta = {
+         profile: '/default.png',
+         loggedIn: false,
+         comments: []
+      }
+   })
+
+   // here we can select a user from a dropdown
+   document.getElementById('my-user-select').addEventListener('change', (event) => {
+      user.user = (event.target as HTMLSelectElement).value
+      user.meta = {
+         profil: `/profil/${user.user}.png`,
+         loggedIn: true,
+         comments: []
+      }
+   })
+
+   // here we can add a comment to the user
+   document.getElementById('add-comment').addEventListener('click', () => {
+      user.meta.comments.push({ ... })
+   })
+
+   // up until here, we have plain javascript, nothing special yet
+   // we still can react to these changes without breaking the existing code
+   const numberOfComments = $.primitive.connect(
+      $.emit(user), // emit the user object
+      $.listen.key('meta'), // listen to the meta key
+      // when the meta object changes, the comments listener gets reattached
+      $.listen.key('comments'),
+      // a proxy is used on the array to make sure we catch all changes
+      $.select(comments => comments.length)
+   )
+
+   // here we fetch some private data only for loggedIn users
+   const privateData = $.primitive.connect(
+      $.emit(user), // emit the user object
+      $.listen.key('meta'), // listen to changes in the meta object
+      $.listen.key('loggedIn'), // when the meta object changes, this listener gets reattached
+      $.if(loggedIn => !!loggedIn)(
+         $.emit(user),
+         $.listen.key('name'), // name changes when user account is switched without logout
+         $.await.latest(
+            $.select(name => `/api/private/${name.toLowerCase()}`),
+            $.select(url => fetch(url).then(response => response.json()) as Promise<PrivateData>),
+         ),
+         $.assert.isError($.stop()),
+      ),
+      $.ifNot(loggedIn => !!loggedIn)(
+         // do not leak any data if not logged in
+         $.select(() => undefined)
+      )
+   )
    ```
 
 For more detailed documentation and advanced usage examples, refer to the official documentation.
