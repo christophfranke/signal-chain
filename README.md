@@ -79,19 +79,22 @@ To start using **signal-chain** in your projects, follow these steps:
    // here we define and connect the data fetching chain
    const data = $.primitive.connect( // connect will run eager and execute synchronously
       user.listen, // listen to changes to the user
+      // type inferrence: string | undefined
       $.assert.isNothing( // assert.isNothing catches null | undefined
-         // inside the assert will only be executed when the assert is true,
+         // this inside block will only be executed when the assertion is true,
          $.emit('guest') // in that case we emit 'guest' as our default
       ),
-      $.select(user => `/api/user/${user.toLowerCase()}`), // create the url
-      $.await.latest( // await.latest ensures that only the latest resolve is being passed on
+      // type inferrence: string
+      $.select(user => `/api/user/${user.toLowerCase()}`), // construct the url
+      $.await.latest( // await.latest will only pass on the latest resolve
          $.select(url => fetch(url).then(response => response.json()) as Promise<UserJSON>),
       ),
+      // type inferrence: UserJSON | Error
       $.assert.isError( // when a promise is rejected, its result will be an Error
          $.effect(err => console.error('Error fetching data:', err)),
          $.stop() // no data, stop processing
       ),
-      // strong type inferrence: the error has been asserted for, so the result must be a UserJSON
+      // type inferrence: UserJSON
       $.log('Data fetched:')
    )
 
