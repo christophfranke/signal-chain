@@ -41,13 +41,15 @@ To start using **signal-chain** in your projects, follow these steps:
 2. **Basic Usage**:
    ```typescript
    import $ from 'signal-chain'
-   
-   const counter = $.primitive.create(0) // creates a reactive primitive, like a ref or a signal
+
+   // creates a reactive primitive, like a ref or a signal
+   const counter = $.primitive.create(0)
 
    // chains are the core of signal-chain, they define a series of operations
    const format = $.chain(
       $.select(x => Math.round(x)),
-      $.select(x => `The number is ${x}`), // select is like map, but with a more distinctive name
+      // select is like map, but with a more distinctive name
+      $.select(x => `The number is ${x}`),
    )
 
    const invert = $.chain(
@@ -57,8 +59,8 @@ To start using **signal-chain** in your projects, follow these steps:
    // for a chain to become active, it needs to be connected
    const disconnect = $.connect(
       counter.listen, // listen to changes in counter
-      invert,
-      format,
+      invert, // apply invert chain
+      format, // apply format chain
       $.effect(result => console.log(result)) // log: The number is 0
    )
 
@@ -78,11 +80,11 @@ To start using **signal-chain** in your projects, follow these steps:
 
    // here we define and connect the data fetching chain
    const data = $.primitive.connect( // connect will run eager and execute synchronously
-      user.listen, // listen to changes to the user
+      user.listen, // listen to user changes
 
       // type inferred: string | undefined
       $.assert.isNothing( // assert.isNothing catches null | undefined
-         // this inside block will only be executed when the assertion is true,
+         // the inside block will only be executed when the assertion is true,
          $.emit('guest') // in that case we emit 'guest' as our default
       ),
 
@@ -93,7 +95,7 @@ To start using **signal-chain** in your projects, follow these steps:
       ),
 
       // type inferred: UserJSON | Error
-      $.assert.isError( // when a promise is rejected, its result will be an Error
+      $.assert.isError( // when a promise is rejected, its result will be a value of type Error
          $.effect(err => console.error('Error fetching data:', err)),
          $.stop() // no data, stop processing
       ),
