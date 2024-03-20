@@ -21,7 +21,7 @@ describe('assert', () => {
                 $.stop()
             ),
             $.select(() => 'I am not a number'),
-            $.log('hallo'),
+            // $.log('hallo'),
             $.assert.not.isNumber(
                 $.effect(() => { ok = true }),
             ),

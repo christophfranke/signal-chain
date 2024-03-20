@@ -101,23 +101,25 @@ export const create = <V>(initialValue: V): BasicSignal<V> => {
     }
   }
 
-  const applyListeners = () => {
+  const applyListeners = (value: V) => {
     listeners.forEach(listener => {
       execute(listener.cleanup)
-      listener.cleanup = listener.fn(currentValue)
+      // this could be not optimal,
+      // maybe we should use currenetValue to update here instead
+      listener.cleanup = listener.fn(value)
     })
   }
 
-  const update = () => {
+  const update = (value: V) => {
     switch(UPDATE_METHOD) {
       case 'immediate':
-        applyListeners()
+        applyListeners(value)
         break
       case 'microtask':
         queuedUpdate++
         queueMicrotask(() => {
           queuedUpdate--
-          applyListeners()
+          applyListeners(value)
         })
         break
       case 'timeout':
@@ -125,7 +127,7 @@ export const create = <V>(initialValue: V): BasicSignal<V> => {
           queuedUpdate++
           setTimeout(() => {
             queuedUpdate--
-            applyListeners()
+            applyListeners(value)
           })
         }
         break
@@ -150,7 +152,7 @@ export const create = <V>(initialValue: V): BasicSignal<V> => {
     update: (value: V) => {
       setValue(value)
       if (queuedUpdate === 0 || BATCHING != 'all') {
-        update()
+        update(value)
       }
     },
     disconnect,
@@ -160,7 +162,7 @@ export const create = <V>(initialValue: V): BasicSignal<V> => {
     set value(value) {
       setValue(value)
       if (queuedUpdate === 0 || BATCHING === 'none') {
-        update()
+        update(value)
       }
     }
   }
