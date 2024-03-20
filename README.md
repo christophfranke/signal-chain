@@ -76,8 +76,8 @@ To start using **signal-chain** in your projects, follow these steps:
 
    type UserJSON = { ... }
 
-   // here we save the user name
-   const user = $.primitive.create<string | undefined>(undefined) // initialized with undefined
+   // here we store the user name, initialized with undefined
+   const user = $.primitive.create<string | undefined>(undefined)
 
 
    // here we define and connect the data fetching chain
@@ -112,6 +112,10 @@ To start using **signal-chain** in your projects, follow these steps:
    ```
 
 4. **Reactive State Management**:
+
+   Sometimes there is existing logic, that we cannot easily change. Instead of trying to find every potential place in the code, that potentially updates an object or sets a key, we can set up a listener from inside a chain, that will wrap the targeted part of the object and automatically listen for any changes. That way, we can gradually extend the observer pattern into a code base, that has not been designed with reactivity in mind.
+
+
    ```typescript
    import $ from 'signal-chain'
 
@@ -147,11 +151,12 @@ To start using **signal-chain** in your projects, follow these steps:
 
    // here we can add a comment to the user
    document.getElementById('add-comment').addEventListener('click', () => {
-      user.meta.comments.push({ ... })
+      user.meta.comments.push({ ... }) // push the new comment
    })
 
-   // up until here, we have plain javascript, nothing special yet
-   // we still can react to these changes without breaking the existing code
+
+   // up until here, we have plain javascript
+   // we can now react to state updates without changing the existing code
    const numberOfComments = $.primitive.connect(
       $.emit(user), // emit the user object
       $.listen.key('meta'), // listen to the meta key
@@ -161,7 +166,8 @@ To start using **signal-chain** in your projects, follow these steps:
       $.select(comments => comments.length)
    )
 
-   // here we fetch some private data only for loggedIn users
+   // or we could fetch some private data only for loggedIn users
+   type PrivateData = { ... }
    const privateData = $.primitive.connect(
       $.emit(user), // emit the user object
       $.listen.key('meta'), // listen to changes in the meta object
@@ -173,12 +179,16 @@ To start using **signal-chain** in your projects, follow these steps:
             $.select(name => `/api/private/${name.toLowerCase()}`),
             $.select(url => fetch(url).then(response => response.json()) as Promise<PrivateData>),
          ),
-         $.assert.isError($.stop()),
+         $.assert.isError($.emit(undefined)), // emit undefined on error
       ),
       $.ifNot(loggedIn => !!loggedIn)(
          // do not leak any data if not logged in
          $.select(() => undefined)
       )
+   )
+
+   console.log(
+      privateData.value // type inferred: PrivateData | undefined
    )
    ```
 
