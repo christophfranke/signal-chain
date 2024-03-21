@@ -25,7 +25,7 @@
 
 #### Additional Features
 
-10. **Performance**: Optimized for low runtime overhead with a small library footprint (<10k).
+10. **Performance**: Optimized for low runtime overhead with a small library footprint (minified <10k).
 11. **TypeScript Support**: Fully typed, focusing on type inference.
 
 

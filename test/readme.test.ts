@@ -119,7 +119,6 @@ describe('readme', () => {
         let done: Function
         let values = [undefined, { a: '/api/private/detlev' }]
         privateData.listen(value => {
-            console.log('privateData', value, values)
             if (values.length > 0) {
                 expect(value).toBe(values.shift())
             } else {

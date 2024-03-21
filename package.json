@@ -20,7 +20,7 @@
     "type": "module",
     "scripts": {
         "build": "tsc",
-        "test:watch": "vitest",
+        "test:w": "vitest",
         "test": "tsc -p tsconfig.test.json && vitest run"
     },
     "repository": {
