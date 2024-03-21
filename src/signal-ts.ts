@@ -1,6 +1,7 @@
 export * from './signal/types'
 
 import { emit, select, stopIf, stop, passIf, passUnique, count } from './signal/tools'
+import { ifFn, ifNot } from './signal/if'
 import { chain, sidechain } from './signal/chain'
 import { connect as connectPrimitive, create as createPrimitive } from './signal/primitive'
 import { key } from './signal/object'
@@ -119,9 +120,9 @@ export default {
   combine,
   each,
   merge,
+  if: ifFn,
+  ifNot,
   // missing:
-  // if
-  // ifNot
   // while
   // cache
 

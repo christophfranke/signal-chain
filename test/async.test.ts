@@ -1,14 +1,6 @@
 import $ from '../src/signal-ts'
 import { describe, it, expect } from 'vitest'
 
-async function maybeFail<T>(x: T): Promise<T> {
-    await new Promise(resolve => setTimeout(resolve, 100))
-    if (Math.random() < 0.25) {
-        throw new Error('Random error')
-    }
-
-    return x
-}
 
 describe('async', () => {
     it('should only resolve the latest value', async () => {

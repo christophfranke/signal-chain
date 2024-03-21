@@ -133,24 +133,24 @@ To start using **signal-chain** in your projects, follow these steps:
    document.getElementById('logout')?.addEventListener('click', () => {
       user.name = 'guest'
       user.meta = {
-         profile: '/default.png',
+         profil: '/default.png',
          loggedIn: false,
          comments: []
       }
    })
 
    // here we can select a user from a dropdown
-   document.getElementById('my-user-select').addEventListener('change', (event) => {
-      user.user = (event.target as HTMLSelectElement).value
+   document.getElementById('my-user-select')?.addEventListener('change', (event) => {
+      user.name = (event.target as HTMLSelectElement).value
       user.meta = {
-         profil: `/profil/${user.user}.png`,
+         profil: `/profil/${user.name}.png`,
          loggedIn: true,
          comments: []
       }
    })
 
    // here we can add a comment to the user
-   document.getElementById('add-comment').addEventListener('click', () => {
+   document.getElementById('add-comment')?.addEventListener('click', () => {
       user.meta.comments.push({ ... }) // push the new comment
    })
 
@@ -184,7 +184,11 @@ To start using **signal-chain** in your projects, follow these steps:
       $.ifNot(loggedIn => !!loggedIn)(
          // do not leak any data if not logged in
          $.select(() => undefined)
-      )
+      ),
+      // typescript cannot infer that the if/ifNot eliminated the possibility of a boolean type here
+      // the assert statement will crash if not given a parameter
+      // it will also remove the type boolean from the type inference
+      $.assert.not.isBoolean()
    )
 
    console.log(

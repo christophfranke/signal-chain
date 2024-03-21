@@ -9,7 +9,7 @@ export function count<V>(): Chain<V, number> {
   }
 }
 
-export function emit<V>(parameter: V): Chain<void, V> {
+export function emit<V, Input = void>(parameter: V): Chain<Input, V> {
   return (next: NextFn<V>) => next(parameter)
 }
 
@@ -49,7 +49,7 @@ export function through<V>(): Chain<V> {
 }
 
 export function select<V>(): Chain<V>
-export function select<From, To>(mapping: Function1<From, To>): Chain<From, To>
+export function select<From, To = From>(mapping: Function1<From, To>): Chain<From, To>
 export function select<From, To>(mapping?: Function1<From, To>): Chain<From, To> {
   if (mapping) {
     return (fn: NextFn<To>, parameter: From) => fn(mapping(parameter))
