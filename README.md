@@ -1,9 +1,9 @@
 # Signal-Chain: A Declarative Reactive Programming Library
-## Simplify State Management in Web Applications
+## Functional State Management in Web Applications
 
 **Signal-Chain** is a library for composing observables and asynchronous operations. It provides a core type, the Chain, several operators (select, effect, await, listen, combine, ...), and a reactive Primitive to combine declarative state management with asynchronous operations.
 
-Think of Signal-Chain as RxJS for the grug developer.
+> Signal-Chain is RxJS for the grug developer.
 
 The essential concepts of **Signal-Chain** are:
 
@@ -275,6 +275,21 @@ const somechain = $.chain(
    truthyness() // T gets inferred to number
 )
 ```
+
+Additionally, **Signal-Chain** includes these operators:
+
+- `$.catch`: Catches errors and passes them on as values.
+- `$.count`: Counts the number of incoming values.
+- `$.collect`: Collects all incoming values.
+- `$.listen.event`: Listens to DOM Events.
+- `$.merge`: Merges multiple chains into a single one.
+- `$.stop`: Stops the chain.
+- `$.passIf`: Passes on the value if the condition is met.
+- `$.stopIf`: Stops the chain if the condition is met.
+- `$.ifNot`: Negation of `$.if` without fallback.
+- `$.passUnique`: Passes only unique values.
+- `$.assert.create`: Creates a custom assertion from a type predicate function.
+- `$.assert.not.create`: Creates a custom negated assertion from a type predicate function.
 
 ### Documentation
 
