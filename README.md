@@ -81,12 +81,12 @@ const format = $.chain(
 )
 ```
 
-Here we have created a chain, that will format a number into a string. There are a few things going on here:
-- The first `$.select` has a type parameter `number`, that specifies that we expect a number as input. If we do not specify this, typescript will infer `unknown` and complain about the `Math.round(x)` operation.
-- The `$.if` operator will only execute the inner chain, if the condition is true.
-- The `$.assert` operator is similar to the `$.if` operator, in that if the condition is met, the inner chain will execute. In contrast to the `$.if` operator, it performs static type inference. In this case, all `number` input is rewritten into a `string` be the `$.select` operator, so typescript can infer that the signal after the assertion block is always a `string`.
+Here we have created a chain, that will format a number into a string. There are a few things going on:
+- The first `$.select` has a type parameter `number`, that specifies that we expect a number as input. If we do not specify this, typescript will infer `unknown` and complain about the `Math.round(x)` operation. This is the recommended approach of defining input types. If the first operator is not a `$.select`, you can always add an empty select operation `$.select<ExpectedType>()`.
+- The `$.if` operator is a higher order operator. That means, it expects a chain (or multiple elements) as a parameter. They define the *inner chain*. The *inner chain* will only execute, if the condition is true.
+- The `$.assert` operator, also a higher order operator, is similar to the `$.if` operator, in that if the condition is met, the *inner chain* will execute. In contrast to the `$.if` operator, it performs static type inference. Here, all `number` input is rewritten into a `string` by the `$.select` operator, causing typescript to infer that the signal thereafter is always a `string`.
 
-We can now use the chain to format any number.
+We can now use this chain to format a number.
 ```typescript
 const counter = $.primitive.create(0)
 const formatted = $.primitive.connect(
@@ -103,7 +103,7 @@ console.log(formatted.value) // logs: We have 10 apples
 
 Admittedly, this type of formatting could have been done with a simple function. Let us take this approach and combine it with some asynchronous logic, so we can see the real value of the chain.
 
-Here, we will implement a auto suggest feature, that fetches some data from an API and logs the result.
+Here, we will implement an auto suggest feature, that fetches some data from an API and logs the result.
 ```typescript
 import $ from 'signal-chain'
 
@@ -113,20 +113,24 @@ document.getElementById('my-input')?.addEventListener('input', (event) => {
    input.value = (event.target as HTMLInputElement).value
 })
 
-// utility function we will use for debounce
-// resolves the promise to the input after the given time
-const wait = <T>(input: T, ms: number) => new Promise<T>(resolve => setTimeout(() => resolve(input), ms))
+// resolves after ms with input
+const wait = <T>(input: T, ms: number) => new Promise<T>(
+   resolve => setTimeout(
+      () => resolve(input),
+      ms
+   )
+)
 
 const suggestions = $.primitive.connect(
    input.listen,
 
-   // debounce
+   // debounce 150ms
    $.await.latest(
       $.select(input => wait(input, 150)),
    ),
-   $.assert.not.isError(),
+   $.assert.not.isError(), // type narrowing
 
-   // ensure long enough input, if not, fallback to empty array
+   // fetch if input is long enough, otherwise fall back to empty array
    $.if((input: string) => input.length > 2, [])(
       $.select(input => `/api/suggest/${input}`),
       $.await.latest(
@@ -141,24 +145,27 @@ const suggestions = $.primitive.connect(
    $.log('Suggestions:') // Suggestions: ['So', 'many', 'suggestions', ...]
 )
 ```
-In this example we first store the user input in a reactive primitive and use it as input for the suggestions chain.
+In this example we first store the user input in a reactive primitive. We use that to primitive as a starting point to define the chain to fetch the suggestions.
+
 Let's have a look at the debounce part:
-- The `$.await.latest` operator will only pass on the latest resolved value. If a value is incoming while the previous promise is still pending, the previous promise will be cancelled.
-- Together with the wait function, this will effectively create a debounce, only passing when there is no user input for 150ms.
+- The `$.await.latest` operator will pass on the latest resolved value. If a value is incoming while the previous promise is still pending, the previous promise will be cancelled and the resolve of the new one is awaited instead.
+- Together with the wait function, this will effectively create a debounce, only passing on the input when there is no new value for 150 ms.
 
-When given no argument, `$.assert.not.isError()` will only pass on the value if it is not an error, otherwise it throws. We use it here to ensure type consistency: `$.await.latest` cannot know, if a promise will resolve or reject. Therefore, it passes on `ValueType | Error`. because we know that our wait function cannot reject, we can safely assert that there is no error. The assertion then removes the `Error` type from the chain.
+When given no argument, `$.assert.not.isError()` will pass on the value if it is not an error, otherwise it throws. We use it here to ensure type consistency: `$.await.latest` cannot know, if a promise will resolve or reject. Therefore, it passes on `TypeOfPromiseResolve | Error`. Because we know that our wait function cannot reject, we can safely assert that there is no error. The assertion operator then removes the `Error` type from the chain.
 
-The `$.if` operator has a second parameter, which is the fallback value. If the condition is not met, the fallback value will be used instead. This defaults to the input of the operator, so if no fallback is given and the condition is not met, the input is being passed through.
+*Why* is it designed like this? It follows the principle of **errors as values**. This reminds the developer that at this place something can go wrong and we need to handle it somehow. If we were not to handle the error at all, the suggestion pimitive would have an inferred type of `string[] | Error`.
 
-The `$.await.latest` is also exactly what we want in fetching data. If a new input is given while the previous request is still pending, the previous request will be cancelled. There are 4 more await operators for different strategies:
-- `$.await.parallel`: Passes all resolved values in the order they resolve.
-- `$.await.order`: Passes all resolved values in the order they were requested.
+The `$.if` operator has a second parameter, which is the fallback value. If the condition is not met, the fallback value will be used instead. If no fallback is given and the condition is not met, the input is being passed through unchanged.
+
+The `$.await.latest` is also exactly what we want in fetching data. If a new input is given while the previous request is still pending, the previous request will be cancelled. This is similar to the RxJS behviour of `switchMap`. For other scenarios there are 4 more await operators with different strategies:
+- `$.await.parallel`: Passes on all resolved values in the order they resolve.
+- `$.await.order`: Passes on all resolved values in the order they were requested.
 - `$.await.block`: Will only enter the inner block when no promise is pending. Incoming values will be discarded.
 - `$.await.queue`: Will only enter the inner block when no promise is pending. Incoming values will be queued and processed by the inner block once the pending promise is resolved.
 
 **Reactivity with Plain Objects**
 
-Sometimes you may work with existing logic, or maybe you prefer to store our state in plain objects. *Signal-Chain* can listen to plain objects and arrays using proxies.
+Sometimes you may work with existing logic, or maybe you prefer to store our state in plain objects. **Signal-Chain** can listen to plain objects and arrays using proxies.
 
 Let's assumet we have a state object like this:
 ```typescript
@@ -184,8 +191,8 @@ const elements = $.primitive.connect(
    $.listen.key('elements'), // listen to changes in the elements key
 )
 ```
-The `$.emit` operator has no input and emits the passed argument.
-The `$.listen.key` operator will listen to changes in the given key of the incoming object. If the value of the key is an array type, the listener will be attached to the array itself via proxy, so that any changes to the array will also be detected.
+- The `$.emit` operator has no input and emits the passed argument.
+- The `$.listen.key` operator will listen to changes in the given key of the incoming object. Whenever the value changes, it will fire. If the value of the key is an array type, the listener will be attached to the array itself via proxy, so that any changes to the array will also be detected.
 
 This is how we could implement a reactive filter:
 ```typescript
@@ -194,20 +201,53 @@ const filteredElements = $.primitive.connect(
       elements.listen,
       filter.listen,
    ),
-   $.select(([elements, filter]) => elements.filter(element => element.name.includes(filter)))
+   $.select(
+      ([elements, filter]) => elements.filter(
+         element => element.name.includes(filter)
+      )
+   )
 )
 ```
 Here we use the `$.combine` operator, which takes a list of elements, and combines them into one element that emits an array. Whenever one of the elements fires with a new value, the combined element will fire with the latest values of all elements.
+
+There is a subtle caveat in this example:
+```typescript
+state.filter = 'Alice' // this works as expected
+state.elements.push({
+   age: 42,
+   name: 'Eve'
+}) // this is also fine
+
+state.elements[0].name = 'Bob' // this will not trigger the filter
+```
+
+The reason for that is, that `$.select` is not a reactive context. Only the `$.listen` operator is reactive. If we want to listen to changes in the elements array, we need to add a listener to the array itself:
+```typescript
+const names = $.chain(
+   $.emit(state),
+   $.listen.key('elements'),
+   $.each(
+      $.listen.key('name')
+   )
+)
+
+```
+
+The `$.each` operator is a higher order operator, that expects a chain as argument. It will apply the chain to each element of an array. In this case, it will listen to changes in the `name` key of each element in the `elements` array.
+
+It is possible that future versions will have a `$.listen.select` operator, which is automatically reactive, but for now we have to subscribe manually, which on the other hand has the great benefit of being explicit.
+
 
 **Types and Inferrence**
 
 We have so far used code with minimal type information. *Signal-Chain* is fully typed and built with type inferrence in mind. In all the above examples we have complete inferrence. Typescript will also protect us from making any mistakes, like chaining the wrong chains together:
 
 ```typescript
-const counter = $.primitive.create('hallo') // <-- wait, this is a string!
+const hallo = $.primitive.create('welt') // inferred as string
 const formatted = $.primitive.connect(
-   counter.listen,
-   $.select(x => 2 * x) // <-- typescript error: The rhs of an arithmetic operation must be a number...
+   hallo.listen,
+   $.select(x => Math.round(x)) // <-- typescript error:
+   // Argument of type 'string' is not assignable to parameter of type 'number'.
 )
 ```
 
@@ -218,7 +258,7 @@ const multiplicator = $.chain(
 )
 
 const numberMultiplicator = $.chain(
-   $.select<number>(x => x * 5) // no we are good
+   $.select<number>(x => x * 5) // now we are good
 )
 ```
 
@@ -226,7 +266,7 @@ In case you do want to be more general, you need to use a function with a generi
 ```typescript
 // creates a chain from T -> boolean
 const truthyness = <T>() => $.chain(
-   $.select((x: T) => !!x)
+   $.select((x: T) => !!x) // output type boolean inferred
 )
 
 const counter = $.primitive.create(0)
@@ -239,7 +279,7 @@ const somechain = $.chain(
 ### Documentation
 
 For more detail, have a look at the official [documentation](https://christophfranke.github.io/signal-chain).
-
+Please note, the documentation is still in progress.
 
 ### Known Issues
 
