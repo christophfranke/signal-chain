@@ -218,10 +218,14 @@ state.elements.push({
    name: 'Eve'
 }) // this is also fine
 
-state.elements[0].name = 'Bob' // this will not trigger the filter
+state.elements[0] = {
+   'Alicia',
+   age: 53
+} // also fine
+state.elements[0].name = 'Bob' // this will not trigger the chain
 ```
 
-The reason for that is, that `$.select` is not a reactive context. Only the `$.listen` operator is reactive. If we want to listen to changes in the elements array, we need to add a listener to the array itself:
+The reason for that is, that although the `$.listen.key('elements')` listens to all array changes, the change to the name property of the array is not considered a change to the array itself. Also, `$.select` is not a reactive context. Only the `$.listen` operator is reactive. If we want to listen to changes to the keys of the objects, that are the elements of the array, we need to add another listener to the key:
 ```typescript
 const names = $.chain(
    $.emit(state),
@@ -235,7 +239,7 @@ const names = $.chain(
 
 The `$.each` operator is a higher order operator, that expects a chain as argument. It will apply the chain to each element of an array. In this case, it will listen to changes in the `name` key of each element in the `elements` array.
 
-It is possible that future versions will have a `$.listen.select` operator, which is automatically reactive, but for now we have to subscribe manually, which on the other hand has the great benefit of being explicit.
+It is possible that future versions will have a `$.listen.select` operator, which is automatically reactive. For now, however, we have to subscribe manually, which on the other hand has the great benefit of being explicit.
 
 
 **Types and Inferrence**
