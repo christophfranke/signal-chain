@@ -1,9 +1,14 @@
 {
     "name": "signal-chain",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "author": "Christoph Franke",
-    "description": "Declarative reactive programming library",
+    "description": "Declarative Reactive Programming Library",
     "license": "MIT",
+    "homepage": "https://christophfranke.github.io/signal-chain/",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/christophfranke/signal-chain.git"
+    },
     "sideEffects": false,
     "files": [
         "dist"
@@ -19,14 +24,10 @@
     "types": "dist/signal-ts.d.ts",
     "type": "module",
     "scripts": {
-        "doc": "typedoc src/docs.ts",
+        "docs": "typedoc src/docs.ts",
         "build": "tsc",
         "test:w": "vitest",
         "test": "tsc -p tsconfig.test.json && vitest run"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/christophfranke/signal-chain.git"
     },
     "devDependencies": {
         "typedoc": "^0.25.12",
