@@ -152,7 +152,7 @@ describe('async', () => {
         const latest = $.primitive.connect(
             input.listen,
             $.await.block(
-                $.select(x => new Promise<string>(resolve => resolves.push(() => resolve(x))))
+                $.select(x => new Promise<string>(resolve => resolves.push(() => resolve(x)))),
             ),
             $.assert.isError($.stop()),
         )

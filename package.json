@@ -19,6 +19,7 @@
     "types": "dist/signal-ts.d.ts",
     "type": "module",
     "scripts": {
+        "doc": "typedoc src/docs.ts",
         "build": "tsc",
         "test:w": "vitest",
         "test": "tsc -p tsconfig.test.json && vitest run"
@@ -28,6 +29,9 @@
         "url": "git+https://github.com/christophfranke/signal-chain.git"
     },
     "devDependencies": {
+        "typedoc": "^0.25.12",
+        "typedoc-plugin-missing-exports": "^2.2.0",
+        "typedoc-plugin-rename-defaults": "^0.7.0",
         "typescript": "^5.2.2",
         "vitest": "^1.4.0"
     }

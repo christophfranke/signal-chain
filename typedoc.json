@@ -1,0 +1,7 @@
+{
+    "$schema": "https://typedoc.org/schema.json",
+    "plugin": [
+        "typedoc-plugin-rename-defaults",
+        "typedoc-plugin-missing-exports"
+    ]
+}

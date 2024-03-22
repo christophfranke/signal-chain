@@ -116,6 +116,16 @@ export default {
   stopIf,
   passIf,
   catch: catchFn,
+  /**
+   * Chain multiple elements together. Each element can be a {@link Chain} or a {@link ConnectedChain}
+   *
+   * @param element1 The first chain element
+   * @param element2 The second chain element
+   * @param ...
+   * @param elment20 The last chain element
+   *
+   * @returns A chain that executes all elements in order
+   */
   chain,
   combine,
   each,
