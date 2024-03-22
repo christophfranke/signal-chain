@@ -127,7 +127,7 @@ const suggestions = $.primitive.connect(
    $.assert.not.isError(),
 
    // ensure long enough input, if not, fallback to empty array
-   $.if(input => input.length > 2, [])(
+   $.if((input: string) => input.length > 2, [])(
       $.select(input => `/api/suggest/${input}`),
       $.await.latest(
          $.select(url => fetch(url).then(response => response.json()) as Promise<string[]>),
