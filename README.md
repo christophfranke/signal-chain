@@ -196,8 +196,7 @@ To start using **signal-chain** in your projects, follow these steps:
    )
    ```
 
-The official documentation is in the making and will be available soon!
-
+The documentation can be found here [https://christophfranke.github.io/signal-chain].
 
 ### Known Issues
 
