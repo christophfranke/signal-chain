@@ -1,4 +1,4 @@
-# Signal-Chai
+# Signal-Chain
 ## A Declarative Reactive Programming Library
 
 **Signal-Chain** is a library for composing observables and asynchronous operations. It provides a core type, the Chain, several operators (select, effect, await, listen, combine, ...), and a reactive Primitive to combine declarative state management with asynchronous operations.
