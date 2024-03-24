@@ -3,7 +3,7 @@
 
 **Signal-Chain** is a library for composing observables and asynchronous operations. It provides a core type, the Chain, several operators (select, effect, await, listen, combine, ...), and a reactive Primitive to combine declarative state management with asynchronous operations.
 
-> Signal-Chain is a small and simple RxJS.
+> Signal-Chain is a smaller and simpler RxJS.
 
 The essential concepts of **Signal-Chain** are:
 
