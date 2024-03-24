@@ -1,9 +1,9 @@
-# Signal-Chain: A Declarative Reactive Programming Library
-## Functional State Management in Web Applications
+# Signal-Chai
+## A Declarative Reactive Programming Library
 
 **Signal-Chain** is a library for composing observables and asynchronous operations. It provides a core type, the Chain, several operators (select, effect, await, listen, combine, ...), and a reactive Primitive to combine declarative state management with asynchronous operations.
 
-> Signal-Chain is RxJS for the grug developer.
+> Signal-Chain is a small and simple RxJS.
 
 The essential concepts of **Signal-Chain** are:
 
