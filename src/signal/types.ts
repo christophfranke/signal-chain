@@ -40,5 +40,14 @@ export type NextFn<V> = (value: V) => CleanupExec
 export type Context = {
   [key: string]: any
 }
-export type Chain<From, To = From> = (next: NextFn<To>, parameter: From, context: Context) => CleanupExec
+export type ChainType = 'sync' | 'async' | 'incomplete'
+export type ChainStatus<CT extends ChainType> = {
+  type: CT
+}
+export type Chain<From, To = From, CT extends ChainType = ChainType> = (next: NextFn<To>, parameter: From, context: Context, status: ChainStatus<CT>) => CleanupExec
+export type SyncChain<From, To = From> = Chain<From, To, 'sync'>
+export type AsyncChain<From, To = From> = Chain<From, To, 'async'>
+export type IncompleteChain<From, To = From> = Chain<From, To, 'incomplete'>
 export type ConnectedChain<From, To> = (next: NextFn<To>, parameter: From) => CleanupExec
+
+

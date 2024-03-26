@@ -18,36 +18,36 @@ describe('evaluate', () => {
     )
 
     it('should evaluate synchronously', () => {
-        expect($.evaluate.sync(syncChain)).toBe(1)
+        expect($.evaluate(syncChain)).toBe(1)
     })
 
     it('should return an error when synchronously evaluating an async chain', () => {
-        expect($.evaluate.sync(asyncChain)).toBeInstanceOf(Error)
+        expect($.evaluate(asyncChain)).toBeInstanceOf(Error)
     })
 
     it('should return an error when synchronously evaluating a incomplete chain', () => {
-        expect($.evaluate.sync(incompleteChain)).toBeInstanceOf(Error)
+        expect($.evaluate(incompleteChain)).toBeInstanceOf(Error)
     })
 
     it('should evaluate synchonously', async () => {
-        const result = await $.evaluate.async(syncChain)
+        const result = await $.evaluate(syncChain)
         expect(result).toBe(1)
     })
 
     it('should evaluate asynchrounously', async () => {
-        const result = await $.evaluate.async(asyncChain)
+        const result = await $.evaluate(asyncChain)
         expect(result).toBe(1)
     })
 
     it('should create a synchronous function from a chain', () => {
-        const fn = $.function.sync(
+        const fn = $.function(
             $.select<number>(x => x + 1)
         )
         expect(fn(0)).toBe(1)
     })
 
     it('should create an asynchronous function from a chain', async () => {
-        const fn = $.function.async(
+        const fn = $.function(
             $.select<number>(),
             $.await.latest(
                 $.select(x => Promise.resolve(x + 1))
@@ -59,3 +59,4 @@ describe('evaluate', () => {
         expect(result).toBe(1)
     })
 })
+
