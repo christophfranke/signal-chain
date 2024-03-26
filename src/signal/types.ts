@@ -18,14 +18,14 @@ export type ListenerDescription<V> = {
 }
 
 
-export type BasicSignal<V> = {
+export type PrimitiveSignal<V> = {
   listen: ConnectedChain<void, V>
   update: Update<V>
   value: V
   disconnect: FunctionVoid
 }
 
-export type BasicComputed<V> = {
+export type PrimitiveReadonly<V> = {
   listen: ConnectedChain<void, V>
   value: V
   disconnect: FunctionVoid

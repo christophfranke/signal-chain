@@ -1,4 +1,4 @@
-export type { BasicComputed, BasicSignal, Chain, CleanupExec, ConnectedChain} from './signal/types'
+export type { PrimitiveReadonly as BasicComputed, PrimitiveSignal as BasicSignal, Chain, CleanupExec, ConnectedChain} from './signal/types'
 
 import type { Chain, ConnectedChain } from './signal-ts'
 

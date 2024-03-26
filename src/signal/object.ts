@@ -1,4 +1,4 @@
-import type { NextFn, ConnectedChain, BasicSignal } from './types'
+import type { NextFn, ConnectedChain, PrimitiveSignal } from './types'
 import * as primitive from './primitive'
 import { observableArray } from './array'
 
@@ -21,7 +21,7 @@ export function objectListener<O extends Object, Key extends keyof O>(obj: O, ke
     }
 
     // Use an existing signal if available, or create a new one
-    const signals: Record<string, BasicSignal<O[Key]>> = (obj as any).__signals__;
+    const signals: Record<string, PrimitiveSignal<O[Key]>> = (obj as any).__signals__;
     if (!signals[key as string]) {
         const value = obj[key]
         let isArray = false

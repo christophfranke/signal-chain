@@ -1,4 +1,4 @@
-import { BasicSignal } from './types'
+import { PrimitiveSignal } from './types'
 import * as primitive from './primitive'
 
 // list of methods that modify the array
@@ -14,7 +14,7 @@ const methods: PropertyKey[] = [
     'unshift'
 ]
 
-export const observableArray = <T>(base: T[]): BasicSignal<T[]> => {
+export const observableArray = <T>(base: T[]): PrimitiveSignal<T[]> => {
     // @ts-expect-error do not create a new signal if on already exists
     if (base.__signal__) {
         // @ts-expect-error do  not create a new signal if on already exists
