@@ -1,3 +1,5 @@
+https://deno.bundlejs.com/badge?q=signal-chain&treeshake=[{+default+as+$+}]
+
 # Signal-Chain
 ## A Declarative Reactive Programming Library
 
@@ -307,4 +309,9 @@ This is a very new library and there is no guarantee that the API is stable. Ple
 - When listening to an object key, and the key had an array type, but is now being assigned a non-array, the application throws an error unsupported.
 - Options and behaviour of update batching and async updates is not stable yet. There are several options and there will be a way to turn on/off batching and asnyc, the default configuration may change though.
 
+### Roadmap
 
+- A `$.listen.select`, that is automatically reactive.
+- some quality of life utilities like `$.debounce` and `$.throttle`
+- Refactor the `Chain` type into `SyncChain` and `AsyncChain` and use that differentiation for `$.evaluate`, i.e. returning a promise or a value, deprecate `$.firstValue`
+- Rename `$.assert` to `$.type`, `$.assert.create` becomes `$.type.is`
