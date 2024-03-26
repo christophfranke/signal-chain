@@ -1,4 +1,4 @@
-import type { Chain, CleanupExec, FunctionVoid } from "./types"
+import type { Chain, FunctionVoid } from "./types"
 import { chain } from "./chain"
 import { execute } from "./util"
 
