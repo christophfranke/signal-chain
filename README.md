@@ -312,7 +312,7 @@ This is a very new library and there is no guarantee that the API is stable. Ple
 
 ### Roadmap
 
-- A `$.listen.select`, that is automatically reactive.
-- some quality of life utilities like `$.debounce` and `$.throttle`
-- Refactor the `Chain` type into `SyncChain` and `AsyncChain` and use that differentiation for `$.evaluate`, i.e. returning a promise or a value, deprecate `$.firstValue`
 - Rename `$.assert` to `$.type`, `$.assert.create` becomes `$.type.is`
+- some quality of life utilities like `$.debounce` and `$.throttle`
+- A `$.listen.select`, that is automatically reactive.
+- Refactor the `Chain` type into `SyncChain` and `AsyncChain` and merge `$.evaluate.sync` and `$.evaluate.async`
