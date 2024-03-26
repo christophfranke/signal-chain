@@ -12,7 +12,8 @@ import { collect, buffer, window } from './signal/collect'
 import { each } from './signal/each'
 import { combine } from './signal/combine'
 import { maybeKey, maybeSelect } from './signal/maybe'
-import { connect, evaluate, firstValue } from './signal/connect'
+import { connect } from './signal/connect'
+import { evaluateAsync, evaluateSync } from './signal/evaluate'
 import { listenToEvent } from './signal/event'
 import { merge } from './signal/merge'
 import { assert as createAssert,
@@ -84,6 +85,11 @@ const listen = {
   event: listenToEvent,
 }
 
+const evaluate = {
+  sync: evaluateSync,
+  async: evaluateAsync
+}
+
 // const solid = {
 //   create: createSolid,
 //   listen: listenSolid,
@@ -97,14 +103,13 @@ export default {
   await: awaitFns,
   assert,
   maybe,
+  evaluate,
 
   // adapters
   // solid,
 
   // connectors
   connect,
-  evaluate,
-  firstValue,
 
   // essentials
   emit,

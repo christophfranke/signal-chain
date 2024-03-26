@@ -8,6 +8,7 @@ import * as chaining from './signal/chain'
 
 import * as effects from './signal/effect'
 import * as collection from './signal/collect'
+import { evaluateAsync, evaluateSync } from './signal/evaluate'
 import { each as eachFn } from './signal/each'
 import { combine as combineFn } from './signal/combine'
 import { merge as mergeFn } from './signal/merge'
@@ -99,6 +100,13 @@ export namespace $ {
   }
 }
 
+export namespace $ {
+  export namespace evaluate {
+    export const sync = evaluateSync
+    export const async = evaluateAsync
+  }
+}
+
 // const solid = {
 //   create: createSolid,
 //   listen: listenSolid,
@@ -133,8 +141,7 @@ export namespace $ {
   export const log = effects.log
 
   export const connect = connection.connect
-  export const evaluate = connection.evaluate
-  export const firstValue = connection.firstValue
+
 
   export const combine = combineFn
   export const each = eachFn
