@@ -1,4 +1,5 @@
 https://deno.bundlejs.com/badge?q=signal-chain&treeshake=[{+default+as+$+}]
+https://badgen.net/npm/v/signal-chain
 
 # Signal-Chain
 ## A Declarative Reactive Programming Library
