@@ -1,6 +1,6 @@
 {
     "name": "signal-chain",
-    "version": "0.7.0",
+    "version": "0.7.1",
     "author": "Christoph Franke",
     "description": "Declarative Reactive Programming Library",
     "license": "MIT",
