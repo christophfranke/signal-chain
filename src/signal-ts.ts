@@ -37,6 +37,8 @@ import { assert as createAssert,
 }  from './signal/assert'
 import { catchFn } from './signal/catch'
 
+export { execute } from './signal/util'
+
 const assert = {
   isNothing,
   isNumber,
