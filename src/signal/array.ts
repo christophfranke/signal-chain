@@ -34,7 +34,7 @@ export const observableArray = <T>(base: T[]): PrimitiveSignal<T[]> => {
             if (typeof reflection === 'function' && methods.includes(prop)) {
                 return function(...args: any[]) {
                     const result = reflection.apply(target, args)
-                    signal.update(target)
+                    signal.value = target
 
                     return result
                 }
@@ -45,7 +45,7 @@ export const observableArray = <T>(base: T[]): PrimitiveSignal<T[]> => {
         set(target: T[], prop: PropertyKey, value: any, receiver: any): boolean {
             const result = Reflect.set(target, prop, value, receiver)
             // console.log('set array ', { prop: target })
-            signal.update(target)
+            signal.value = target
             return result
         }
     }

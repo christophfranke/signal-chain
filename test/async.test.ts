@@ -5,7 +5,8 @@ import { describe, it, expect } from 'vitest'
 describe('async', () => {
     it('should only resolve the latest value', async () => {
         const resolves = [] as Function[]
-        const input = $.primitive.create('init')
+        // no batching for input, triggering the chain on every set of input
+        const input = $.primitive.create('init', { update: 'immediate' })
         const latest = $.primitive.connect(
             input.listen,
             $.await.latest(
@@ -14,11 +15,8 @@ describe('async', () => {
             $.assert.isError($.stop()),
         )
 
-
-        input.update('second')
-        input.update('third')
-
-        await Promise.resolve()
+        input.value = 'second'
+        input.value = 'third'
 
         // not yet finished
         expect(latest.value).toBe(undefined)
@@ -26,6 +24,7 @@ describe('async', () => {
         resolves.reverse()
         resolves.forEach(resolve => resolve())
 
+        // give a chance to run promises
         await Promise.resolve()
 
         // all but the latest value have been discarded
@@ -34,7 +33,7 @@ describe('async', () => {
 
     it('should resolve all values when resolved', async () => {
         const resolves = [] as Function[]
-        const input = $.primitive.create('init')
+        const input = $.primitive.create('init',  { update: 'immediate' })
         const latest = $.primitive.connect(
             input.listen,
             // $.log('input'),
@@ -46,10 +45,8 @@ describe('async', () => {
         )
 
 
-        input.update('second')
-        input.update('third')
-
-        await Promise.resolve()
+        input.value = 'second'
+        input.value = 'third'
 
         // not yet finished
         expect(latest.value).toBe(undefined)
@@ -70,7 +67,7 @@ describe('async', () => {
 
     it('should resolve values in order of appearence', async () => {
         const resolves = [] as Function[]
-        const input = $.primitive.create('init')
+        const input = $.primitive.create('init',  { update: 'immediate' })
         const latest = $.primitive.connect(
             input.listen,
             $.await.order(
@@ -83,10 +80,8 @@ describe('async', () => {
         )
 
 
-        input.update('second')
-        input.update('third')
-
-        await Promise.resolve()
+        input.value = 'second'
+        input.value = 'third'
 
         // not yet finished
         expect(latest.value).toBe(undefined)
@@ -104,10 +99,11 @@ describe('async', () => {
 
     it('should queue incoming values before start resolving', async () => {
         let resolves = [] as Function[]
-        const input = $.primitive.create('init')
+        const input = $.primitive.create('init',  { update: 'immediate' })
         const latest = $.primitive.connect(
             input.listen,
             $.await.queue(
+                // $.log('in queue'),
                 $.select(x => new Promise<string>(resolve => {
                     const fn = () => {
                         resolve(x)
@@ -117,18 +113,17 @@ describe('async', () => {
                 }))
             ),
             $.assert.isError($.stop()),
-            $.collect()
+            $.collect(),
         )
 
-
-        input.update('second')
-        input.update('third')
-
-        await Promise.resolve()
-
-        // not yet finished
-        expect(latest.value).toBe(undefined)
+        // wait for initial promise to be initialized
+        await new Promise(resolve => setTimeout(resolve, 0))
         expect(resolves.length).toBe(1)
+        expect(latest.value).toBe(undefined)
+
+        // add two more values
+        input.value = 'second'
+        input.value = 'third'
 
         // start resolving
         resolves[0]()
@@ -158,10 +153,8 @@ describe('async', () => {
         )
 
 
-        input.update('second')
-        input.update('third')
-
-        await Promise.resolve()
+        input.value = 'second'
+        input.value = 'third'
 
         // not yet finished
         expect(latest.value).toBe(undefined)

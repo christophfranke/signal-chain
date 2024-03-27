@@ -2,15 +2,6 @@ import type { NextFn, ListenerDescription, CleanupExec, PrimitiveSignal, Primiti
 import { chain } from './chain'
 import { execute } from './util'
 
-type UpdateMethods = 'microtask' | 'timeout' | 'immediate'
-const UPDATE_METHOD = 'microtask' as UpdateMethods
-
-type BatchMethods = 'none' | 'assignment' | 'all'
-const BATCHING = 'assignment' as BatchMethods
-
-if (UPDATE_METHOD === 'immediate' && BATCHING != 'none') {
-  throw new Error('Cannot batch updates with immediate update method')
-}
 
 export interface ConnectCall {
   <V1, V2>(element1: Chain<V1, V2>): PrimitiveReadonly<V2>
@@ -39,26 +30,41 @@ export interface ConnectCall {
 export const connect: ConnectCall = (listen1: Chain<any, any>, ...additionalListeners: Chain<any, any>[]): PrimitiveReadonly<any> => {
   const chained = chain(listen1, ...additionalListeners) as Chain<void, any>
   let currentValue: any
+  let listeners: ListenerDescription<any>[] = []
+  const applyListeners = () => {
+    listeners.forEach(listener => {
+      execute(listener.cleanup)
+      listener.cleanup = listener.fn(currentValue)
+    })
+  }
+
+  const listen = (fn: NextFn<any>): CleanupExec => {
+    const listener = {
+      cleanup: fn(currentValue),
+      fn
+    }
+
+    listeners.push(listener)
+
+    return () => {
+      execute(listener.cleanup, true)
+      listener.cleanup = null
+      listeners = listeners.filter(other => other !== listener)
+    }
+  }
+
   const context = {}
   let unsubscribe = [
     chained((value: any) => {
       currentValue = value
+      applyListeners()
     }, undefined, context)
   ]
 
-  const listen = (fn: NextFn<any>): CleanupExec => {
-    const remove = chained(fn, undefined, context)
-    unsubscribe.push(remove)
-
-    return () => {
-      execute(remove, true)
-      unsubscribe = unsubscribe.filter(other => other !== remove)
-    }
-  }
-
   const disconnect = () => {
-    currentValue = undefined as any
     execute(unsubscribe, true)
+    execute(listeners.map(listener => listener.cleanup))
+    listeners = []
   }
 
   return {
@@ -69,9 +75,42 @@ export const connect: ConnectCall = (listen1: Chain<any, any>, ...additionalList
     }
   }
 }
+type UpdateMethods = 'immediate' | 'microtask' | 'timeout'
+type Config = {
+  batch?: boolean
+  update?: UpdateMethods
+}
+type DefaultConfig = {
+  batch: boolean
+  update: UpdateMethods
+}
 
+const defaultConfig: DefaultConfig = {
+  batch: true,
+  update: 'microtask',
+}
+type ReadonlyConfig = {
+  readonly batch: boolean,
+  readonly update: UpdateMethods
+}
 
-export const create = <V>(initialValue: V): PrimitiveSignal<V> => {
+const updateMethod = (config: Config): UpdateMethods => {
+  return config.update ?? defaultConfig.update
+}
+
+const batchMethod = (config: Config) => {
+  return (updateMethod(config) !== 'immediate') && (config.batch ?? defaultConfig.batch)
+}
+
+export const setConfig = (config?: Config) => {
+  if (config) {
+    Object.assign(defaultConfig, config)
+  }
+
+  return defaultConfig as ReadonlyConfig
+}
+
+export const create = <V>(initialValue: V, config: Config = {}): PrimitiveSignal<V> => {
   let disconnected = false
   let queuedUpdate = 0
   let currentValue = initialValue
@@ -101,38 +140,40 @@ export const create = <V>(initialValue: V): PrimitiveSignal<V> => {
     }
   }
 
-  const applyListeners = (value: V) => {
+  const applyListeners = () => {
     listeners.forEach(listener => {
       execute(listener.cleanup)
-      // this could be not optimal,
-      // maybe we should use currenetValue to update here instead
-      listener.cleanup = listener.fn(value)
+      listener.cleanup = listener.fn(currentValue)
     })
   }
 
-  const update = (value: V) => {
-    switch(UPDATE_METHOD) {
+  const update = () => {
+    const batched = batchMethod(config)
+    const method = updateMethod(config)
+    switch(method) {
       case 'immediate':
-        applyListeners(value)
+        applyListeners()
         break
       case 'microtask':
-        queuedUpdate++
-        queueMicrotask(() => {
-          queuedUpdate--
-          applyListeners(value)
-        })
+        if (!queuedUpdate || !batched) {
+          queuedUpdate++
+          queueMicrotask(() => {
+            queuedUpdate--
+            applyListeners()
+          })
+        }
         break
       case 'timeout':
-        if (queuedUpdate === 0) {
+        if (!queuedUpdate || !batched) {
           queuedUpdate++
           setTimeout(() => {
             queuedUpdate--
-            applyListeners(value)
+            applyListeners()
           })
         }
         break
       default:
-        let x: never = UPDATE_METHOD
+        let x: never = method
         throw new Error(`Unknown update method: ${x}`)
     }
   }
@@ -143,27 +184,19 @@ export const create = <V>(initialValue: V): PrimitiveSignal<V> => {
       listener.cleanup = null
     })
     listeners = []
-    currentValue = undefined as V
     disconnected = true
   }
 
   return {
     listen,
-    update: (value: V) => {
-      setValue(value)
-      if (queuedUpdate === 0 || BATCHING != 'all') {
-        update(value)
-      }
-    },
+    update,
     disconnect,
     get value() {
       return currentValue
     },
     set value(value) {
       setValue(value)
-      if (queuedUpdate === 0 || BATCHING === 'none') {
-        update(value)
-      }
+      update()
     }
   }
 }

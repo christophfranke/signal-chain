@@ -10,7 +10,6 @@ export type Executable<Func> = void | Falsy | Func | Executable<Func>[]
 
 
 export type CleanupExec = Executable<Function1<boolean, void>>
-export type Update<V> = (value: V) => void
 
 export type ListenerDescription<V> = {
   cleanup: CleanupExec,
@@ -20,7 +19,7 @@ export type ListenerDescription<V> = {
 
 export type PrimitiveSignal<V> = {
   listen: ConnectedChain<void, V>
-  update: Update<V>
+  update: FunctionVoid
   value: V
   disconnect: FunctionVoid
 }

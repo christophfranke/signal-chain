@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest'
 
 describe('counter', () => {
     it('should count the emitted values correctly', async () => {
-        let emitter = $.primitive.create(0)
+        let emitter = $.primitive.create(0, { update: 'immediate', batch: false })
 
         const count = $.primitive.connect(
             emitter.listen,
@@ -13,12 +13,11 @@ describe('counter', () => {
                 $.count(),
                 $.select(x => -x),
             ),
-            $.sidechain(
-                $.count(),
-            ),
-            $.select(([x, y]) => -x * y),
+            $.count(),
             // $.log('count'),
         )
+
+        expect(count.value).toBe(1)
 
         emitter.value = 1
         emitter.value = 2
@@ -29,18 +28,17 @@ describe('counter', () => {
         // set 5 times, value updates immediately
         expect(emitter.value).toBe(5)
 
-        // when next microtask is available, expect it to update once
-        await Promise.resolve()
-        expect(count.value).toBe(1)
+        // count is 3, because it has been triggered with 0, 2, and 4
+        expect(count.value).toBe(3)
 
         emitter.value = 11
-        await Promise.resolve()
 
-        // count has not changed, passIf is blocking completion of the chain
-        expect(count.value).toBe(1)
+        // emitter is not even, so still 3
+        expect(count.value).toBe(3)
 
         emitter.value = 10
-        await Promise.resolve()
-        expect(count.value).toBe(4) // 2 squared
+
+        // emiiter is even, no it's 4
+        expect(count.value).toBe(4)
     })
 })

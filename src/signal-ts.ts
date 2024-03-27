@@ -3,7 +3,7 @@ export * from './signal/types'
 import { emit, select, stopIf, stop, passIf, passUnique, count } from './signal/tools'
 import { ifFn, ifNot } from './signal/if'
 import { chain, sidechain } from './signal/chain'
-import { connect as connectPrimitive, create as createPrimitive } from './signal/primitive'
+import { connect as connectPrimitive, create as createPrimitive, setConfig } from './signal/primitive'
 import { key } from './signal/object'
 import { log, effect } from './signal/effect'
 import { awaitParallel, awaitLatest, awaitOrder, awaitQueue, awaitBlock } from './signal/async'
@@ -97,6 +97,8 @@ const evaluate = {
 // }
 
 export default {
+  config: setConfig,
+
   // namespces
   primitive,
   listen,

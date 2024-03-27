@@ -9,7 +9,7 @@ describe('Counter application', () => {
 
   it('updates the count on event', () => {
     const counter = $.primitive.create(0)
-    counter.update(counter.value + 1)
+    counter.value++
     expect(counter.value).toBe(1)
   })
 

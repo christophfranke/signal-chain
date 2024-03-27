@@ -113,15 +113,21 @@ describe('readme', () => {
                 $.emit(undefined)
             ),
             $.assert.isBoolean($.select(() => undefined)),
+            // $.log('update private data'),
         )
 
+
+
+        await new Promise(resolve => setTimeout(resolve, 0))
 
         let done: Function
         let values = [undefined, { a: '/api/private/detlev' }]
         privateData.listen(value => {
             if (values.length > 0) {
-                expect(value).toBe(values.shift())
-            } else {
+                expect(JSON.stringify(value)).toBe(JSON.stringify(values.shift()))
+            }
+
+            if (!values.length) {
                 done()
             }
         })
