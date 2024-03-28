@@ -21,9 +21,7 @@ The essential concepts of **Signal-Chain** are:
 npm install signal-chain
 ```
 
-### Examples
-
-**Primitives**
+### Primitives
 
 Let's define a primitive.
 ```typescript
@@ -80,7 +78,7 @@ const disconnect = counter.listen(value => {
 })
 ```
 
-**Chains**
+### Chains
 
 Now that we have seen how *Primitives* work, we will use *Chains* to operate on *Primitives*. A *Chain* gives us the ability to define a series of operations that can be combined and reused. As opposed to the `listen` function of a *Primitive*, a *Chain* will not execute before it is connected.
 
@@ -119,7 +117,7 @@ counter.value = 10
 console.log(squaredValue.value) // logs: 100
 ```
 
-**Reusability**
+### Reusability
 
 In the above example, we squared a counter value. Sometimes, we want to specify behaviour, but want to be able to apply it to different sources later. We can do that, by creating a chain that requires an input value.
 ```typescript
@@ -169,7 +167,7 @@ counter.value = -1 // logs: I don't like -1 apples
 console.log(formatted.value) // logs: We have 10 apples
 ```
 
-**Asynchronous Operations**
+### Asynchronous Operations
 
 Admittedly, this type of formatting could have been done with a traditional function. Let us take this approach and combine it with some asynchronous logic. This is a main strength of **Signal-Chain**: It allows to define asynchronous reactive behaviour in a structured way.
 
@@ -234,7 +232,7 @@ The `$.await.latest` is also exactly what we want in fetching data. If a new inp
 - `$.await.block`: Will only enter the inner block when no promise is pending. Incoming values will be discarded.
 - `$.await.queue`: Will only enter the inner block when no promise is pending. Incoming values will be queued and processed by the inner block once the pending promise is resolved.
 
-**Reactivity with Plain Objects**
+### Reactivity with Plain Objects
 
 Sometimes you may work with existing logic, or maybe you prefer to store our state in plain objects. **Signal-Chain** can listen to plain objects and arrays using proxies.
 
@@ -315,8 +313,7 @@ The `$.each` operator is a higher order operator, that expects a chain as argume
 
 It is possible that future versions will have a `$.listen.select` operator, which is automatically reactive. For now, however, we have to subscribe manually, which on the other hand has the great benefit of being explicit.
 
-
-**Types and Inferrence**
+### Types and Inferrence
 
 We have so far used code with minimal type information. *Signal-Chain* is fully typed and built with type inferrence in mind. In all the above examples we have complete inferrence. Typescript will also protect us from making any mistakes, like chaining the wrong chains together:
 
@@ -418,7 +415,7 @@ $.config({ update: 'microtask', batch: false }) // no batching, use microtasks f
 console.log($.config()) // log the current configuration
 ```
 
-Or you can pass a config when creating a primitive:
+Alternatively, you can pass a config when creating a primitive, that will only affect this primitive:
 ```typescript
 const counter = $.primitive.create(0, { update: 'sync' })
 $.connect(
@@ -433,6 +430,9 @@ counter.value = 3 // logs: value 3
 
 This can be especially useful when you want to use the primitive as a queue to push in tasks.
 
+### Integration with Frontend Frameworks
+
+**Signal-Chain** can be used with SolidJS, using the wrapper `signal-chain-solid`: https://www.npmjs.com/package/signal-chain-solid
 
 ### Documentation
 
@@ -444,16 +444,14 @@ This is a very new library and there is no guarantee that the API is stable. Ple
 
 - When listening to an object key, and the key had an array type, but is now being assigned a non-array, the application throws an error unsupported.
 - The interface design of `$.if` makes it impossible to infer the type of the condition, making it necessary to specify the type of the condition explicitly.
-- Options and behaviour of update batching and async updates is not stable yet. There are several options and there will be a way to turn on/off batching and asnyc, the default configuration may change though.
-
->TODO: The second part is no longer true. Instead describe the api
 
 ### Roadmap
 
 - Rename `$.assert` to `$.type`, `$.assert.create` becomes `$.type.is`
 - some quality of life utilities like `$.debounce` and `$.throttle`
+- Add a `$.toFunction` that creates a function from a chain
 - A `$.listen.select`, that is automatically reactive.
 - Refactor the `Chain` type into `SyncChain` and `AsyncChain` and merge `$.evaluate.sync` and `$.evaluate.async`
-- Add a `$.toFunction` that creates a function from a chain
+- Add integration wrappers for VueJS and React.
 
 > TODO: SyncChain, AsyncChain, WeakChain, AsyncWeakChain
