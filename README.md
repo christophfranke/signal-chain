@@ -31,6 +31,7 @@ import $ from 'signal-chain'
 
 const counter = $.primitive.create(0)
 ```
+> TODO: Describe all functions of a primitive
 
 Now we can define a chain that listens to the counter and logs the value using the `effect` operator.
 ```typescript
@@ -85,9 +86,10 @@ const format = $.chain(
 ```
 
 Here we have created a chain, that will format a number into a string. There are a few things going on:
-- The first `$.select` has a type parameter `number`, that specifies that we expect a number as input. If we do not specify this, typescript will infer `unknown` and complain about the `Math.round(x)` operation. This is the recommended approach of defining input types. If the first operator is not a `$.select`, you can always add an empty select operation `$.select<ExpectedType>()`.
+- The first `$.select` has a type parameter `number`, that specifies that we expect a number as input. If we do not specify this, typescript will infer `unknown` and complain about the `Math.round(x)` operation. This is the recommended approach of defining input types for chains. It is possible to add an empty select operation `$.select<ExpectedType>()`.
 - The `$.if` operator is a higher order operator. That means, it expects a chain (or multiple elements) as a parameter. They define the *inner chain*. The *inner chain* will only execute, if the condition is true.
 - The `$.assert` operator, also a higher order operator, is similar to the `$.if` operator, in that if the condition is met, the *inner chain* will execute. In contrast to the `$.if` operator, it performs static type inference. Here, all `number` input is rewritten into a `string` by the `$.select` operator, causing typescript to infer that the signal thereafter is always a `string`.
+> TODO: Describe what happens to the type, why does the assert operator work here
 
 We can now use this chain to format a number.
 ```typescript
@@ -137,22 +139,25 @@ const suggestions = $.primitive.connect(
    $.if((input: string) => input.length > 2, [])(
       $.select(input => `/api/suggest/${input}`),
       $.await.latest(
+         // TODO: Break next line into something more readable
          $.select(url => fetch(url).then(response => response.json()) as Promise<string[]>),
       ),
       $.assert.isError(
          $.effect(err => console.error('Error fetching suggestions:', err)),
-         $.select(() => [])
+         $.select(() => []) // fallback to empty array
       ),
    ),
 
    $.log('Suggestions:') // Suggestions: ['So', 'many', 'suggestions', ...]
 )
 ```
-In this example we first store the user input in a reactive primitive. We use that to primitive as a starting point to define the chain to fetch the suggestions.
+In this example we first store the user input in a reactive primitive. We use that primitive as a starting point to define the chain to fetch the suggestions.
 
 Let's have a look at the debounce part:
 - The `$.await.latest` operator will pass on the latest resolved value. If a value is incoming while the previous promise is still pending, the previous promise will be cancelled and the resolve of the new one is awaited instead.
 - Together with the wait function, this will effectively create a debounce, only passing on the input when there is no new value for 150 ms.
+
+> TODO: Explain line by line, don't jump to the assert too early
 
 When given no argument, `$.assert.not.isError()` will pass on the value if it is not an error, otherwise it throws. We use it here to ensure type consistency: `$.await.latest` cannot know, if a promise will resolve or reject. Therefore, it passes on `TypeOfPromiseResolve | Error`. Because we know that our wait function cannot reject, we can safely assert that there is no error. The assertion operator then removes the `Error` type from the chain.
 
@@ -160,9 +165,9 @@ When given no argument, `$.assert.not.isError()` will pass on the value if it is
 
 The `$.if` operator has a second parameter, which is the fallback value. If the condition is not met, the fallback value will be used instead. If no fallback is given and the condition is not met, the input is being passed through unchanged.
 
-The `$.await.latest` is also exactly what we want in fetching data. If a new input is given while the previous request is still pending, the previous request will be cancelled. This is similar to the RxJS behviour of `switchMap`. For other scenarios there are 4 more await operators with different strategies:
-- `$.await.parallel`: Passes on all resolved values in the order they resolve.
-- `$.await.order`: Passes on all resolved values in the order they were requested.
+The `$.await.latest` is also exactly what we want in fetching data. If a new input is given while the previous request is still pending, the previous request will be discarded. This is similar to the RxJS behviour of `switchMap`. For other scenarios there are 4 more await operators with different strategies:
+- `$.await.parallel`: Passes on each resolved value as soon as it resolves.
+- `$.await.order`: Passes on resolved values in the order they were requested.
 - `$.await.block`: Will only enter the inner block when no promise is pending. Incoming values will be discarded.
 - `$.await.queue`: Will only enter the inner block when no promise is pending. Incoming values will be queued and processed by the inner block once the pending promise is resolved.
 
@@ -196,6 +201,7 @@ const elements = $.primitive.connect(
 ```
 - The `$.emit` operator has no input and emits the passed argument.
 - The `$.listen.key` operator will listen to changes in the given key of the incoming object. Whenever the value changes, it will fire. If the value of the key is an array type, the listener will be attached to the array itself via proxy, so that any changes to the array will also be detected.
+> TODO: Explain how the proxy gets inserted
 
 This is how we could implement a reactive filter:
 ```typescript
@@ -215,20 +221,20 @@ Here we use the `$.combine` operator, which takes a list of elements, and combin
 
 There is a subtle caveat in this example:
 ```typescript
-state.filter = 'Alice' // this works as expected
+state.filter = 'Alice' // this will trigger the filter chain to update
 state.elements.push({
    age: 42,
    name: 'Eve'
-}) // this is also fine
+}) // so will this
 
 state.elements[0] = {
    'Alicia',
    age: 53
-} // also fine
+} // and this
 state.elements[0].name = 'Bob' // this will not trigger the chain
 ```
 
-The reason for that is, that although the `$.listen.key('elements')` listens to all array changes, the change to the name property of the array is not considered a change to the array itself. Also, `$.select` is not a reactive context. Only the `$.listen` operator is reactive. If we want to listen to changes to the keys of the objects, that are the elements of the array, we need to add another listener to the key:
+The reason for that is, that although the `$.listen.key('elements')` listens to all array changes, the change to the name property of the array is not considered a change to the array itself. Also, `$.select` is not a reactive context. If we want to listen to changes to the keys of the objects, that are the elements of the array, we need to add another listener to the key:
 ```typescript
 const names = $.chain(
    $.emit(state),
@@ -257,6 +263,8 @@ const formatted = $.primitive.connect(
    // Argument of type 'string' is not assignable to parameter of type 'number'.
 )
 ```
+
+> TODO: Be a bit more verbose here
 
 Sometimes a little context is necessary
 ```typescript
@@ -303,6 +311,8 @@ Additionally, **Signal-Chain** includes these operators:
 For more detail, have a look at the official [documentation](https://christophfranke.github.io/signal-chain).
 Please note, the documentation is still in progress.
 
+> TODO: Documentation in progress
+
 ### Known Issues
 
 This is a very new library and there is no guarantee that the API is stable. Please use with caution and report any issues you encounter.
@@ -310,9 +320,14 @@ This is a very new library and there is no guarantee that the API is stable. Ple
 - When listening to an object key, and the key had an array type, but is now being assigned a non-array, the application throws an error unsupported.
 - Options and behaviour of update batching and async updates is not stable yet. There are several options and there will be a way to turn on/off batching and asnyc, the default configuration may change though.
 
+>TODO: The second part is no longer true. Instead describe the api
+
 ### Roadmap
 
 - Rename `$.assert` to `$.type`, `$.assert.create` becomes `$.type.is`
 - some quality of life utilities like `$.debounce` and `$.throttle`
 - A `$.listen.select`, that is automatically reactive.
 - Refactor the `Chain` type into `SyncChain` and `AsyncChain` and merge `$.evaluate.sync` and `$.evaluate.async`
+- Add a `$.toFunction` that creates a function from a chain
+
+> TODO: SyncChain, AsyncChain, WeakChain, AsyncWeakChain
