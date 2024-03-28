@@ -189,12 +189,17 @@ export const create = <V>(initialValue: V, config: Config = {}): PrimitiveSignal
 
   return {
     listen,
-    update,
+    update: (...args: [a?: V]) => {
+      if (args.length > 0) {
+        setValue(args[0]!)
+      }
+      update()
+    },
     disconnect,
     get value() {
       return currentValue
     },
-    set value(value) {
+    set value(value: V) {
       setValue(value)
       update()
     }

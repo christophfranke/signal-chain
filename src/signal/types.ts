@@ -3,6 +3,11 @@ export type Function0<R = void> = () => R
 export type Function1<A, R = void> = (a: A) => R
 export type Function2<A, B, R = void> = (a: A, b: B) => R
 
+export interface FunctionOptional1<A, R = void> {
+  (): R
+  (a: A): R
+}
+
 type Falsy = false | null | undefined | 0 | ''
 export type Maybe<T> = T | null | undefined
 
@@ -19,7 +24,7 @@ export type ListenerDescription<V> = {
 
 export type PrimitiveSignal<V> = {
   listen: ConnectedChain<void, V>
-  update: FunctionVoid
+  update: FunctionOptional1<V>
   value: V
   disconnect: FunctionVoid
 }
