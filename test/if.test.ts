@@ -41,4 +41,24 @@ describe('if', () => {
 
         expect(true).toBe(true)
     })
+
+    it('should not fail on the readme example', () => {
+        const format = $.chain(
+           $.select<number>(x => Math.round(x)),
+           $.if((x: number) => x > 1)(
+              $.select(x => `We have ${x} apples`)
+           ),
+           $.if(x => x === 1)(
+              $.select(() => `We have an apple`)
+           ),
+           $.if(x => x === 0)(
+              $.select(() => `We have no apples`)
+           ),
+           $.assert.isNumber(
+              $.select(() => 'I cannot handle negative apples. Or NaN apples.')
+           )
+        )
+
+        expect($.evaluate.sync($.emit(1), format)).toBe('We have an apple')
+    })
 })

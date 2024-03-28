@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest'
 
 describe('counter', () => {
     it('should count the emitted values correctly', async () => {
-        let emitter = $.primitive.create(0, { update: 'immediate', batch: false })
+        let emitter = $.primitive.create(0, { update: 'sync' })
 
         const count = $.primitive.connect(
             emitter.listen,

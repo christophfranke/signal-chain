@@ -6,7 +6,7 @@ describe('async', () => {
     it('should only resolve the latest value', async () => {
         const resolves = [] as Function[]
         // no batching for input, triggering the chain on every set of input
-        const input = $.primitive.create('init', { update: 'immediate' })
+        const input = $.primitive.create('init', { update: 'sync' })
         const latest = $.primitive.connect(
             input.listen,
             $.await.latest(
@@ -33,7 +33,7 @@ describe('async', () => {
 
     it('should resolve all values when resolved', async () => {
         const resolves = [] as Function[]
-        const input = $.primitive.create('init',  { update: 'immediate' })
+        const input = $.primitive.create('init',  { update: 'sync' })
         const latest = $.primitive.connect(
             input.listen,
             // $.log('input'),
@@ -67,7 +67,7 @@ describe('async', () => {
 
     it('should resolve values in order of appearence', async () => {
         const resolves = [] as Function[]
-        const input = $.primitive.create('init',  { update: 'immediate' })
+        const input = $.primitive.create('init',  { update: 'sync' })
         const latest = $.primitive.connect(
             input.listen,
             $.await.order(
@@ -99,7 +99,7 @@ describe('async', () => {
 
     it('should queue incoming values before start resolving', async () => {
         let resolves = [] as Function[]
-        const input = $.primitive.create('init',  { update: 'immediate' })
+        const input = $.primitive.create('init',  { update: 'sync' })
         const latest = $.primitive.connect(
             input.listen,
             $.await.queue(

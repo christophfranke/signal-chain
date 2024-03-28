@@ -23,7 +23,7 @@ npm install signal-chain
 
 ### Examples
 
-**Getting Started**
+**Primitives**
 
 Let's define a primitive.
 ```typescript
@@ -31,46 +31,101 @@ import $ from 'signal-chain'
 
 const counter = $.primitive.create(0)
 ```
-> TODO: Describe all functions of a primitive
 
-Now we can define a chain that listens to the counter and logs the value using the `effect` operator.
+A primitive is a container holding a single reactive value. We can access and update the value directly.
 ```typescript
-const log = $.chain(
+counter.value = 1
+console.log(counter.value) // logs: 1
+```
+
+We can also listen to changes of the counter.
+```typescript
+const disconnect = counter.listen(newValue => {
+   console.log('new value:', newValue) // logs: new value: 1
+})
+
+counter.value = 10 // logs: new value: 10
+disconnect()
+counter.value = 0 // silence
+```
+
+Note, that the listen fires immediately with the current value.
+
+We can also return a cleanup function, that is being executed before the next value is passed in and on disconnect.
+```typescript
+const el = document.createNode('p')
+const disconnect = counter.listen(value => {
+   el.innerHTML = `Value is ${value}.`
+   body.appendChild(el)
+   return () => {
+      body.removeChild(el)
+   }
+})
+```
+Whenever the value changes, the paragraph will be updated. When the listener is disconnected, the paragraph will be removed from the body.
+
+This example has a serious downside though: We remove and append the element each time a value is updated, which feels somewhat wasteful. We can improve on this by using the parameter passed to the cleanup: A `boolean` that is true on disconnect.
+
+```typescript
+const el = document.createNode('p')
+body.appendChild(el)
+
+const disconnect = counter.listen(value => {
+   el.innerHTML = `Value is ${value}.`
+   return final => {
+      if (final) {
+         body.removeChild(el)
+      }
+   }
+})
+```
+
+**Chains**
+
+Now that we have seen how *Primitives* work, we will use *Chains* to operate on *Primitives*. A *Chain* gives us the ability to define a series of operations that can be combined and reused. As opposed to the `listen` function of a *Primitive*, a *Chain* will not execute before it is connected.
+
+We can use the `listen` function of a *Primitive* as an element in a *Chain* and combine it with a few operators:
+- `$.select`: Maps the incoming value to a new value.
+- `$.effect`: Executes a side effect. Like in the `listen` function we can return a cleanup.
+
+```typescript
+const counter = $.primitive.create(1)
+
+const logSquare = $.chain(
    counter.listen,
+   $.select(value => value * value),
    $.effect(value => console.log(value))
 )
 ```
 
-When we connect the chain, it will start listening to the counter.
+Once we connect the chain, it will start listening to the counter. Note that it executes immediately and synchronously on connection.
 ```typescript
-const disconnect = $.connect(log) // logs: 0
+const disconnect = $.connect(logSquare) // logs: 1
 
-counter.value = 1 // logs: 1
+counter.value = 2 // logs: 4
+disconnect()
+counter.value = 3 // silence
 ```
 
-We can also rewrite the value into something different with the `select` operation.
+We can also store the result of the chain in a primitive.
 ```typescript
-const formatted = $.chain(
+const squared = $.chain(
    counter.listen,
-   $.select(x => `The number is ${x}`)
+   $.select(value => value * value)
 )
-```
-
-And then we create a primitive that is connected to the formatted chain.
-```typescript
-const formattedValue = $.primitive.connect(formatted)
+const squaredValue = $.primitive.connect(squared)
 
 counter.value = 10
-console.log(formattedValue.value) // logs: The number is 10
+console.log(squaredValue.value) // logs: 100
 ```
 
 **Reusability**
 
-In the above example, we formatted a counter value. Sometimes, we want to specify behaviour, but want to apply it to different sources. We can do that, by creating a chain that requires an input value.
+In the above example, we squared a counter value. Sometimes, we want to specify behaviour, but want to be able to apply it to different sources later. We can do that, by creating a chain that requires an input value.
 ```typescript
 const format = $.chain(
    $.select<number>(x => Math.round(x)),
-   $.if(x => x > 1)(
+   $.if((x: number) => x > 1)(
       $.select(x => `We have ${x} apples`)
    ),
    $.if(x => x === 1)(
@@ -80,16 +135,23 @@ const format = $.chain(
       $.select(() => `We have no apples`)
    ),
    $.assert.isNumber(
-      $.select(() => 'I cannot handle negative apples. Or NaN apples.')
+      $.effect(x => console.log("I don't like", x, 'apples')),
+      $.stop()
    )
 )
 ```
 
 Here we have created a chain, that will format a number into a string. There are a few things going on:
-- The first `$.select` has a type parameter `number`, that specifies that we expect a number as input. If we do not specify this, typescript will infer `unknown` and complain about the `Math.round(x)` operation. This is the recommended approach of defining input types for chains. It is possible to add an empty select operation `$.select<ExpectedType>()`.
-- The `$.if` operator is a higher order operator. That means, it expects a chain (or multiple elements) as a parameter. They define the *inner chain*. The *inner chain* will only execute, if the condition is true.
-- The `$.assert` operator, also a higher order operator, is similar to the `$.if` operator, in that if the condition is met, the *inner chain* will execute. In contrast to the `$.if` operator, it performs static type inference. Here, all `number` input is rewritten into a `string` by the `$.select` operator, causing typescript to infer that the signal thereafter is always a `string`.
-> TODO: Describe what happens to the type, why does the assert operator work here
+
+The first `$.select` has a type parameter `number`, which specifies that we expect a number as input. If we do not specify this, Typescript will infer `unknown` and complain about the `Math.round(x)` operation. This is the recommended approach of defining input types for chains. It is possible to use an empty select operation `$.select<ExpectedType>()`.
+
+The `$.if` operator is a higher order operator. It expects a condition function, and can then define a new chain, the *inner chain*, which will only execute if the condition is true. If the condition is not met, it will pass on the value. The select operator in the *inner chain* rewrites the `number` into a `string`.
+
+The `$.assert.isNumber` is similar to the `$.if` operator, in that it allows you to define a *inner chain*, that only gets executed when the incoming value is a `number`. Every *Chain* is strongly typed, and after the `$.select` operations inside the `$.if` statement, Typescript will infer `number | string`, after the `$.if` operations.
+
+The `$.effect` writes to the console, without changing the passing value. The `$.stop` operator stops the chain, therefore the output of the *inner chain* is being inferred as `never`. The `$.assert` operator then concludes, that the remaining type can only be a `string`.
+
+This results in `format` being of type `Chain<number, string>`, a chain that requires a `number` input producing a `string` output.
 
 We can now use this chain to format a number.
 ```typescript
@@ -102,11 +164,14 @@ const formatted = $.primitive.connect(
 
 counter.value = 10 // logs: We have 10 apples
 console.log(formatted.value) // logs: We have 10 apples
+
+counter.value = -1 // logs: I don't like -1 apples
+console.log(formatted.value) // logs: We have 10 apples
 ```
 
 **Asynchronous Operations**
 
-Admittedly, this type of formatting could have been done with a simple function. Let us take this approach and combine it with some asynchronous logic, so we can see the real value of the chain.
+Admittedly, this type of formatting could have been done with a traditional function. Let us take this approach and combine it with some asynchronous logic. This is a main strength of **Signal-Chain**: It allows to define asynchronous reactive behaviour in a structured way.
 
 Here, we will implement an auto suggest feature, that fetches some data from an API and logs the result.
 ```typescript
@@ -157,9 +222,7 @@ Let's have a look at the debounce part:
 - The `$.await.latest` operator will pass on the latest resolved value. If a value is incoming while the previous promise is still pending, the previous promise will be cancelled and the resolve of the new one is awaited instead.
 - Together with the wait function, this will effectively create a debounce, only passing on the input when there is no new value for 150 ms.
 
-> TODO: Explain line by line, don't jump to the assert too early
-
-When given no argument, `$.assert.not.isError()` will pass on the value if it is not an error, otherwise it throws. We use it here to ensure type consistency: `$.await.latest` cannot know, if a promise will resolve or reject. Therefore, it passes on `TypeOfPromiseResolve | Error`. Because we know that our wait function cannot reject, we can safely assert that there is no error. The assertion operator then removes the `Error` type from the chain.
+The `$.await.latest` operator will resolve the promise or pass on an `Error` if rejected. Its output type is `TypeOfPromiseResolve | Error`. In this case we know, that `wait` cannot reject, so we can safely assert that there is no error. The assertion operator then removes the `Error` type from the chain.
 
 *Why* is it designed like this? It follows the principle of **errors as values**. This reminds the developer that at this place something can go wrong and we need to handle it somehow. If we were not to handle the error at all, the suggestion pimitive would have an inferred type of `string[] | Error`.
 
@@ -201,7 +264,9 @@ const elements = $.primitive.connect(
 ```
 - The `$.emit` operator has no input and emits the passed argument.
 - The `$.listen.key` operator will listen to changes in the given key of the incoming object. Whenever the value changes, it will fire. If the value of the key is an array type, the listener will be attached to the array itself via proxy, so that any changes to the array will also be detected.
-> TODO: Explain how the proxy gets inserted
+
+In order for the `$.listen.key` operator to work on the object, it inserts a proxy in place of the object key resp. array. The proxy is designed to not interfere with the object itself, but it will make the object appear slightly different, for example on `console.log` operations.
+
 
 This is how we could implement a reactive filter:
 ```typescript
@@ -262,11 +327,20 @@ const formatted = $.primitive.connect(
    $.select(x => Math.round(x)) // <-- typescript error:
    // Argument of type 'string' is not assignable to parameter of type 'number'.
 )
+
+
+const squareRoot = $.chain(
+   $.select<number>(x => Math.sqrt(x))
+)
+const toFixed = $.chain(
+   $.select((x: number) => x.toFixed(2))
+)
+
+$.chain(toFixed, squareRoot) // <-- typescript error:
+// toFixed returns a string, but squareRoot expects a number
 ```
 
-> TODO: Be a bit more verbose here
-
-Sometimes a little context is necessary
+Sometimes we need to explicitly define the type of a chain, because it is impossible to infer.
 ```typescript
 const multiplicator = $.chain(
    $.select(x => x * 5) // <-- typescript error: x is unknown
@@ -277,7 +351,7 @@ const numberMultiplicator = $.chain(
 )
 ```
 
-In case you do want to be more general, you need to use a function with a generic
+In some cases, we would like the type to be inferred by usage. We can use Typescript *Generics* to achieve that. In order for this to work, we need to define a function, that returns a chain, because values cannot be generic in Typescript.
 ```typescript
 // creates a chain from T -> boolean
 const truthyness = <T>() => $.chain(
@@ -288,7 +362,7 @@ const counter = $.primitive.create(0)
 const somechain = $.chain(
    counter.listen,
    truthyness() // T gets inferred to number
-)
+) // somechain is inferred as Chain<void, boolean>
 ```
 
 Additionally, **Signal-Chain** includes these operators:
@@ -305,19 +379,71 @@ Additionally, **Signal-Chain** includes these operators:
 - `$.passUnique`: Passes only unique values.
 - `$.assert.create`: Creates a custom assertion from a type predicate function.
 - `$.assert.not.create`: Creates a custom negated assertion from a type predicate function.
+- `$.maybe.select`: Selects if the value is not undefined or null.
+- `$.maybe.listen.key`: Listens to a key if the value is not undefined or null.
+- `$.listen.event`: Listen to DOM events.
+
+**Signal-Chain** also includes a few utility functions:
+- `$.evaluate.sync`: Evaluates a chain synchronously.
+- `$.evaluate.async`: Evaluates a chain asynchronously.
+- `$.config`: Configures the update behaviour of the library.
+
+### Controlling Update Behaviour
+
+The default behaviour for updating *Primitives* is to batch updates and execute them asynchronously as microtasks. For example:
+
+```typescript
+const counter = $.primitive.create(0)
+$.connect(
+   counter.listen,
+   $.log('value') // logs: value 0
+)
+
+counter.value = 1
+counter.value = 2
+counter.value = 3
+
+// stop execution and give a chance to run queued microtasks
+await Promise.resolve()
+
+// logs: value 3
+```
+
+This is desirable on most cases. However, there are cases where we want to execute updates synchronously. You can either change the behaviour globally using `$.config`
+```typescript
+$.config({ update: 'sync' }) // synchronous updates, batching turned off
+$.config({ update: 'timeout' }) // use macrotasks for updates
+$.config({ batch: false }) // turn off batching
+$.config({ update: 'microtask', batch: false }) // no batching, use microtasks for updates
+console.log($.config()) // log the current configuration
+```
+
+Or you can pass a config when creating a primitive:
+```typescript
+const counter = $.primitive.create(0, { update: 'sync' })
+$.connect(
+   counter.listen,
+   $.log('value') // logs: value 0
+)
+
+counter.value = 1 // logs: value 1
+counter.value = 2 // logs: value 2
+counter.value = 3 // logs: value 3
+```
+
+This can be especially useful when you want to use the primitive as a queue to push in tasks.
+
 
 ### Documentation
 
-For more detail, have a look at the official [documentation](https://christophfranke.github.io/signal-chain).
-Please note, the documentation is still in progress.
-
-> TODO: Documentation in progress
+This was a brief overview of the **Signal-Chain** library. There is an effort to create a comprehensive documentation to cover all operators and concepts. However, the current focus is on inlining the documentation, so it is available in the editor via Typescript LSP.
 
 ### Known Issues
 
 This is a very new library and there is no guarantee that the API is stable. Please use with caution and report any issues you encounter.
 
 - When listening to an object key, and the key had an array type, but is now being assigned a non-array, the application throws an error unsupported.
+- The interface design of `$.if` makes it impossible to infer the type of the condition, making it necessary to specify the type of the condition explicitly.
 - Options and behaviour of update batching and async updates is not stable yet. There are several options and there will be a way to turn on/off batching and asnyc, the default configuration may change though.
 
 >TODO: The second part is no longer true. Instead describe the api

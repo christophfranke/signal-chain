@@ -1,10 +1,9 @@
 {
     "name": "signal-chain",
-    "version": "0.7.6",
+    "version": "0.7.7",
     "author": "Christoph Franke",
     "description": "Declarative Reactive Programming Library",
     "license": "MIT",
-    "homepage": "https://christophfranke.github.io/signal-chain/",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/christophfranke/signal-chain.git"

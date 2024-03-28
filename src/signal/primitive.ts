@@ -75,7 +75,7 @@ export const connect: ConnectCall = (listen1: Chain<any, any>, ...additionalList
     }
   }
 }
-type UpdateMethods = 'immediate' | 'microtask' | 'timeout'
+type UpdateMethods = 'sync' | 'microtask' | 'timeout'
 type Config = {
   batch?: boolean
   update?: UpdateMethods
@@ -99,7 +99,7 @@ const updateMethod = (config: Config): UpdateMethods => {
 }
 
 const batchMethod = (config: Config) => {
-  return (updateMethod(config) !== 'immediate') && (config.batch ?? defaultConfig.batch)
+  return (updateMethod(config) !== 'sync') && (config.batch ?? defaultConfig.batch)
 }
 
 export const setConfig = (config?: Config) => {
@@ -151,7 +151,7 @@ export const create = <V>(initialValue: V, config: Config = {}): PrimitiveSignal
     const batched = batchMethod(config)
     const method = updateMethod(config)
     switch(method) {
-      case 'immediate':
+      case 'sync':
         applyListeners()
         break
       case 'microtask':
