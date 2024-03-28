@@ -42,7 +42,7 @@ export function objectListener<O extends Object, Key extends keyof O>(obj: O, ke
                     throw new Error('Not implemented yet: Cannot change type of array')
                 }
                 // console.log('update object', { [key]: newValue })
-                signals[key as string].value = newValue
+                signals[key as string].update(newValue)
             },
             enumerable: true,
             configurable: true,
