@@ -451,8 +451,8 @@ This is a very new library and there is no guarantee that the API is stable. Ple
 - some quality of life utilities like `$.debounce` and `$.throttle`
 - Add a `$.toFunction` that creates a function from a chain
 - A `$.listen.select`, that is automatically reactive.
-- Refactor the `Chain` type into `SyncChain` and `AsyncChain` and merge `$.evaluate.sync` and `$.evaluate.async`
+- Break down `Chain` type into `SyncChain`, `AsyncChain`, `WeakChain`, `AsyncWeakChain`, which allows to merge `$.evaluate.sync` and `$.evaluate.async` into a single `$.evaluate` and statically predict the possible outcome types.
 - Add integration wrappers for VueJS and React.
 - `$.await.select` operator for more intuitive promise chaining.
 
-> TODO: SyncChain, AsyncChain, WeakChain, AsyncWeakChain
+
