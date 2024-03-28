@@ -169,7 +169,7 @@ console.log(formatted.value) // logs: We have 10 apples
 
 ### Asynchronous Operations
 
-Admittedly, this type of formatting could have been done with a traditional function. Let us take this approach and combine it with some asynchronous logic. This is a main strength of **Signal-Chain**: It allows to define asynchronous reactive behaviour in a structured way.
+Admittedly, this type of formatting could have been done with a traditional function. Let us take this approach and combine it with some asynchronous logic. This is a main strength of **Signal-Chain**: It allows to define asynchronous reactive behaviour in a declaritive way.
 
 Here, we will implement an auto suggest feature, that fetches some data from an API and logs the result.
 ```typescript
@@ -202,8 +202,8 @@ const suggestions = $.primitive.connect(
    $.if((input: string) => input.length > 2, [])(
       $.select(input => `/api/suggest/${input}`),
       $.await.latest(
-         // TODO: Break next line into something more readable
-         $.select(url => fetch(url).then(response => response.json()) as Promise<string[]>),
+         $.select(url => fetch(url)),
+         $.select(async response => (await response).json() as Promise<string[]>),
       ),
       $.assert.isError(
          $.effect(err => console.error('Error fetching suggestions:', err)),
@@ -453,5 +453,6 @@ This is a very new library and there is no guarantee that the API is stable. Ple
 - A `$.listen.select`, that is automatically reactive.
 - Refactor the `Chain` type into `SyncChain` and `AsyncChain` and merge `$.evaluate.sync` and `$.evaluate.async`
 - Add integration wrappers for VueJS and React.
+- `$.await.select` operator for more intuitive promise chaining.
 
 > TODO: SyncChain, AsyncChain, WeakChain, AsyncWeakChain
