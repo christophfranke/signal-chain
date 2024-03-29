@@ -38,4 +38,24 @@ describe('evaluate', () => {
         const result = await $.evaluate.async(asyncChain)
         expect(result).toBe(1)
     })
+
+    it('should create a synchronous function from a chain', () => {
+        const fn = $.function.sync(
+            $.select<number>(x => x + 1)
+        )
+        expect(fn(0)).toBe(1)
+    })
+
+    it('should create an asynchronous function from a chain', async () => {
+        const fn = $.function.async(
+            $.select<number>(),
+            $.await.latest(
+                $.select(x => Promise.resolve(x + 1))
+            ),
+            $.assert.not.isError()
+        )
+
+        const result = await fn(0)
+        expect(result).toBe(1)
+    })
 })
