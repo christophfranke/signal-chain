@@ -41,7 +41,7 @@ describe('readme', () => {
             user.listen, // listen to user changes
 
             // type inferred: string | undefined
-            $.assert.isNothing( // assert.isNothing catches null | undefined
+            $.type.isNothing( // type.isNothing catches null | undefined
                 // the inside block will only be executed when the assertion is true,
                 $.emit('guest') // in that case we emit 'guest' as our default
             ),
@@ -53,7 +53,7 @@ describe('readme', () => {
             ),
 
             // type inferred: UserJSON | Error
-            $.assert.isError( // when a promise is rejected, its result will be a value of type Error
+            $.type.isError( // when a promise is rejected, its result will be a value of type Error
                 $.effect(err => console.error('Error fetching data:', err)),
                 $.stop() // no data, stop processing
             ),
@@ -106,13 +106,13 @@ describe('readme', () => {
                     $.select(url => mockfetch(url).then(response => response.json()) as Promise<PrivateData>),
                 ),
                 // $.log('2'),
-                $.assert.isError($.emit(undefined)), // emit undefined on error
+                $.type.isError($.emit(undefined)), // emit undefined on error
             ),
             $.ifNot(loggedIn => !!loggedIn)(
                 // do not leak any data if not logged in
                 $.emit(undefined)
             ),
-            $.assert.isBoolean($.select(() => undefined)),
+            $.type.isBoolean($.select(() => undefined)),
             // $.log('update private data'),
         )
 

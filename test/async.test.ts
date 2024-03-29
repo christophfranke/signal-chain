@@ -12,7 +12,7 @@ describe('async', () => {
             $.await.latest(
                 $.select(x => new Promise<string>(resolve => resolves.push(() => resolve(x))))
             ),
-            $.assert.isError($.stop()),
+            $.type.isError($.stop()),
         )
 
         input.value = 'second'
@@ -40,7 +40,7 @@ describe('async', () => {
             $.await.parallel(
                 $.select(x => new Promise<string>(resolve => resolves.push(() => resolve(x))))
             ),
-            $.assert.isError($.stop()),
+            $.type.isError($.stop()),
             // $.log('parallel')
         )
 
@@ -73,7 +73,7 @@ describe('async', () => {
             $.await.order(
                 $.select(x => new Promise<string>(resolve => resolves.push(() => resolve(x))))
             ),
-            $.assert.isError($.stop()),
+            $.type.isError($.stop()),
             // $.log('order'),
             $.collect(),
             // $.log('collected')
@@ -112,7 +112,7 @@ describe('async', () => {
                     resolves.push(fn)
                 }))
             ),
-            $.assert.isError($.stop()),
+            $.type.isError($.stop()),
             $.collect(),
         )
 
@@ -149,7 +149,7 @@ describe('async', () => {
             $.await.block(
                 $.select(x => new Promise<string>(resolve => resolves.push(() => resolve(x)))),
             ),
-            $.assert.isError($.stop()),
+            $.type.isError($.stop()),
         )
 
 

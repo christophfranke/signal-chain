@@ -52,7 +52,7 @@ describe('evaluate', () => {
             $.await.latest(
                 $.select(x => Promise.resolve(x + 1))
             ),
-            $.assert.not.isError()
+            $.type.not.isError()
         )
 
         const result = await fn(0)

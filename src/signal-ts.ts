@@ -13,7 +13,7 @@ import { each } from './signal/each'
 import { combine } from './signal/combine'
 import { maybeKey, maybeSelect } from './signal/maybe'
 import { connect } from './signal/connect'
-import { evaluateAsync, evaluateSync } from './signal/evaluate'
+import { evaluateAsync, evaluateSync, toFunctionSync, toFunctionAsync } from './signal/evaluate'
 import { listenToEvent } from './signal/event'
 import { merge } from './signal/merge'
 import { assert as createAssert,
@@ -39,7 +39,7 @@ import { catchFn } from './signal/catch'
 
 export { execute } from './signal/util'
 
-const assert = {
+const type = {
   isNothing,
   isNumber,
   isArray,
@@ -48,7 +48,7 @@ const assert = {
   isFunction,
   isObject,
   isError,
-  create: createAssert,
+  is: createAssert,
   not: {
     isNothing: isNotNothing,
     isNumber: isNotNumber,
@@ -58,7 +58,7 @@ const assert = {
     isFunction: isNotFunction,
     isObject: isNotObject,
     isError: isNotError,
-    create: createAssertNot,
+    is: createAssertNot,
   }
 }
 
@@ -92,6 +92,11 @@ const evaluate = {
   async: evaluateAsync
 }
 
+const func = {
+  sync: toFunctionSync,
+  async: toFunctionAsync
+}
+
 // const solid = {
 //   create: createSolid,
 //   listen: listenSolid,
@@ -105,9 +110,10 @@ export default {
   primitive,
   listen,
   await: awaitFns,
-  assert,
+  type,
   maybe,
   evaluate,
+  function: func,
 
   // adapters
   // solid,

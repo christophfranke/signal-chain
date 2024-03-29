@@ -132,7 +132,7 @@ const format = $.chain(
    $.if(x => x === 0)(
       $.select(() => `We have no apples`)
    ),
-   $.assert.isNumber(
+   $.type.isNumber(
       $.effect(x => console.log("I don't like", x, 'apples')),
       $.stop()
    )
@@ -145,9 +145,9 @@ The first `$.select` has a type parameter `number`, which specifies that we expe
 
 The `$.if` operator is a higher order operator. It expects a condition function, and can then define a new chain, the *inner chain*, which will only execute if the condition is true. If the condition is not met, it will pass on the value. The select operator in the *inner chain* rewrites the `number` into a `string`.
 
-The `$.assert.isNumber` is similar to the `$.if` operator, in that it allows you to define a *inner chain*, that only gets executed when the incoming value is a `number`. Every *Chain* is strongly typed, and after the `$.select` operations inside the `$.if` statement, Typescript will infer `number | string`, after the `$.if` operations.
+The `$.type.isNumber` is similar to the `$.if` operator, in that it allows you to define a *inner chain*, that only gets executed when the incoming value is a `number`. Every *Chain* is strongly typed, and after the `$.select` operations inside the `$.if` statement, Typescript will infer `number | string`, after the `$.if` operations.
 
-The `$.effect` writes to the console, without changing the passing value. The `$.stop` operator stops the chain, therefore the output of the *inner chain* is being inferred as `never`. The `$.assert` operator then concludes, that the remaining type can only be a `string`.
+The `$.effect` writes to the console, without changing the passing value. The `$.stop` operator stops the chain, therefore the output of the *inner chain* is being inferred as `never`. The `$.type` operator then concludes, that the remaining type can only be a `string`.
 
 This results in `format` being of type `Chain<number, string>`, a chain that requires a `number` input producing a `string` output.
 
@@ -196,7 +196,7 @@ const suggestions = $.primitive.connect(
    $.await.latest(
       $.select(input => wait(input, 150)),
    ),
-   $.assert.not.isError(), // type narrowing
+   $.type.not.isError(), // type narrowing
 
    // fetch if input is long enough, otherwise fall back to empty array
    $.if((input: string) => input.length > 2, [])(
@@ -205,7 +205,7 @@ const suggestions = $.primitive.connect(
          $.select(url => fetch(url)),
          $.select(async response => (await response).json() as Promise<string[]>),
       ),
-      $.assert.isError(
+      $.type.isError(
          $.effect(err => console.error('Error fetching suggestions:', err)),
          $.select(() => []) // fallback to empty array
       ),
@@ -220,7 +220,7 @@ Let's have a look at the debounce part:
 - The `$.await.latest` operator will pass on the latest resolved value. If a value is incoming while the previous promise is still pending, the previous promise will be cancelled and the resolve of the new one is awaited instead.
 - Together with the wait function, this will effectively create a debounce, only passing on the input when there is no new value for 150 ms.
 
-The `$.await.latest` operator will resolve the promise or pass on an `Error` if rejected. Its output type is `TypeOfPromiseResolve | Error`. In this case we know, that `wait` cannot reject, so we can safely assert that there is no error. The assertion operator then removes the `Error` type from the chain.
+The `$.await.latest` operator will resolve the promise or pass on an `Error` if rejected. Its output type is `TypeOfPromiseResolve | Error`. In this case we know, that `wait` cannot reject, so we can safely assert that there is no error. The type operator then removes the `Error` type from the chain.
 
 *Why* is it designed like this? It follows the principle of **errors as values**. This reminds the developer that at this place something can go wrong and we need to handle it somehow. If we were not to handle the error at all, the suggestion pimitive would have an inferred type of `string[] | Error`.
 
@@ -374,8 +374,8 @@ Additionally, **Signal-Chain** includes these operators:
 - `$.stopIf`: Stops the chain if the condition is met.
 - `$.ifNot`: Negation of `$.if` without fallback.
 - `$.passUnique`: Passes only unique values.
-- `$.assert.create`: Creates a custom assertion from a type predicate function.
-- `$.assert.not.create`: Creates a custom negated assertion from a type predicate function.
+- `$.type.is`: Creates a custom type assertion from a type predicate function.
+- `$.type.not.is`: Creates a custom negated type assertion from a type predicate function.
 - `$.maybe.select`: Selects if the value is not undefined or null.
 - `$.maybe.listen.key`: Listens to a key if the value is not undefined or null.
 - `$.listen.event`: Listen to DOM events.
@@ -383,6 +383,8 @@ Additionally, **Signal-Chain** includes these operators:
 **Signal-Chain** also includes a few utility functions:
 - `$.evaluate.sync`: Evaluates a chain synchronously.
 - `$.evaluate.async`: Evaluates a chain asynchronously.
+- `$.function.sync`: Creates a synchronous function from a chain.
+- `$.function.async`: Creates an asynchronous function from a chain.
 - `$.config`: Configures the update behaviour of the library.
 
 ### Controlling Update Behaviour
@@ -447,9 +449,8 @@ This is a very new library and there is no guarantee that the API is stable. Ple
 
 ### Roadmap
 
-- Rename `$.assert` to `$.type`, `$.assert.create` becomes `$.type.is`
-- some quality of life utilities like `$.debounce` and `$.throttle`
-- Add a `$.toFunction` that creates a function from a chain
+- Some quality of life utilities like `$.debounce` and `$.throttle`
+- Operator `$.while` to repeat a chain until a condition is met (e.g. retry failed http request).
 - A `$.listen.select`, that is automatically reactive.
 - Break down `Chain` type into `SyncChain`, `AsyncChain`, `WeakChain`, `AsyncWeakChain`, which allows to merge `$.evaluate.sync` and `$.evaluate.async` into a single `$.evaluate` and statically predict the possible outcome types.
 - Add integration wrappers for VueJS and React.

@@ -22,7 +22,7 @@ describe('if', () => {
             $.await.latest(
                 $.select(input => wait(input, 150)),
             ),
-            $.assert.not.isError(),
+            $.type.not.isError(),
 
             // ensure long enough input, if not, fallback to empty array
             $.if((input: string)  => input.length > 2, [])(
@@ -30,7 +30,7 @@ describe('if', () => {
                 $.await.latest(
                     $.select(url => fetchmock(url).then(response => response.json()) as Promise<string[]>),
                 ),
-                $.assert.isError(
+                $.type.isError(
                     $.effect(err => console.error('Error fetching suggestions:', err)),
                     $.select(() => []),
                 ),
@@ -54,7 +54,7 @@ describe('if', () => {
            $.if(x => x === 0)(
               $.select(() => `We have no apples`)
            ),
-           $.assert.isNumber(
+           $.type.isNumber(
               $.select(() => 'I cannot handle negative apples. Or NaN apples.')
            )
         )
