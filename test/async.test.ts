@@ -170,4 +170,25 @@ describe('async', () => {
         // only the first value has made it through
         expect(latest.value).toEqual('init')
     })
+
+    it('should debounce', async () => {
+        const input = $.primitive.create('init')
+        const debounced = $.primitive.connect(
+            input.listen,
+            $.debounce(100),
+        )
+
+        input.value = 'second'
+        input.value = 'third'
+
+        await new Promise(resolve => setTimeout(resolve, 50))
+
+        // not yet finished
+        expect(debounced.value).toBe(undefined)
+
+        await new Promise(resolve => setTimeout(resolve, 150))
+
+        // only the last value has made it through
+        expect(debounced.value).toEqual('third')
+    })
 })

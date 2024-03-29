@@ -7,7 +7,6 @@ import { connect as connectPrimitive, create as createPrimitive, setConfig } fro
 import { key } from './signal/object'
 import { log, effect } from './signal/effect'
 import { awaitParallel, awaitLatest, awaitOrder, awaitQueue, awaitBlock } from './signal/async'
-// import { createSolid, fromSolid, listenSolid } from './signal/solid'
 import { collect, buffer, window } from './signal/collect'
 import { each } from './signal/each'
 import { combine } from './signal/combine'
@@ -97,11 +96,16 @@ const func = {
   async: toFunctionAsync
 }
 
-// const solid = {
-//   create: createSolid,
-//   listen: listenSolid,
-//   primitive: fromSolid,
-// }
+
+const debounce = <V>(ms: number) => chain(
+  select<V>(),
+  type.not.isError(
+    awaitFns.latest(
+      select(v => new Promise<V>(resolve => setTimeout(() => resolve(v), ms))),
+    ),
+    type.not.isError(),
+  ),
+)
 
 export default {
   config: setConfig,
@@ -157,8 +161,8 @@ export default {
   window,
   sidechain,
   passUnique,
+  debounce,
   // missing:
-  // debounce
   // throttle
   // interval
 }

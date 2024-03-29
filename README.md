@@ -369,6 +369,7 @@ Additionally, **Signal-Chain** includes these operators:
 - `$.collect`: Collects all incoming values.
 - `$.listen.event`: Listens to DOM Events.
 - `$.merge`: Merges multiple chains into a single one.
+- `$.debounce`: Debounces the incoming values.
 - `$.stop`: Stops the chain.
 - `$.passIf`: Passes on the value if the condition is met.
 - `$.stopIf`: Stops the chain if the condition is met.
@@ -379,6 +380,7 @@ Additionally, **Signal-Chain** includes these operators:
 - `$.maybe.select`: Selects if the value is not undefined or null.
 - `$.maybe.listen.key`: Listens to a key if the value is not undefined or null.
 - `$.listen.event`: Listen to DOM events.
+
 
 **Signal-Chain** also includes a few utility functions:
 - `$.evaluate.sync`: Evaluates a chain synchronously.
@@ -449,7 +451,7 @@ This is a very new library and there is no guarantee that the API is stable. Ple
 
 ### Roadmap
 
-- Some quality of life utilities like `$.debounce` and `$.throttle`
+- Some quality of life utilities like `$.throttle`
 - Operator `$.while` to repeat a chain until a condition is met (e.g. retry failed http request).
 - A `$.listen.select`, that is automatically reactive.
 - Break down `Chain` type into `SyncChain`, `AsyncChain`, `WeakChain`, `AsyncWeakChain`, which allows to merge `$.evaluate.sync` and `$.evaluate.async` into a single `$.evaluate` and statically predict the possible outcome types.
