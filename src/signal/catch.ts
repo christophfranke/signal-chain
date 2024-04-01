@@ -13,9 +13,9 @@ export const catchFn: CatchCall = (listen1?: Chain<any, any>, ...additionalListe
     }
 
     const listen = chain(listen1, ...additionalListeners)
-    return (resolve, parameter, context) => {
+    return (resolve, parameter, context, status) => {
         try {
-            return listen(resolve, parameter, context)
+            return listen(resolve, parameter, context, status)
         } catch (error) {
             return resolve(error)
         }

@@ -45,10 +45,11 @@ export type ChainStatus<CT extends ChainType = ChainType> = {
   is: CT
 }
 export type Chain<From, To = From, CT extends ChainType = ChainType> = (next: NextFn<To>, parameter: From, context: Context, status: ChainStatus<CT>) => CleanupExec
-export type SyncChain<From, To = From> = Chain<From, To, 'sync' | 'async' | 'incomplete' | 'async-incomplete'>
+export type SyncChain<From, To = From> = Chain<From, To>
 export type AsyncChain<From, To = From> = Chain<From, To, 'async' | 'async-incomplete'>
 export type WeakChain<From, To = From> = Chain<From, To, 'incomplete' | 'async-incomplete'>
 export type AsyncWeakChain<From, To = From> = Chain<From, To, 'async-incomplete'>
+export type AnyChain<From, To = From> = Chain<From, To, any>
 
 export type ConnectedChain<From, To> = (next: NextFn<To>, parameter: From) => CleanupExec
 export type Test = AsyncChain<number, number> extends SyncChain<number, number> ? true : false
