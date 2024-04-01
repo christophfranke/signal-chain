@@ -452,6 +452,7 @@ This is a very new library and there is no guarantee that the API is stable. Ple
 ### Roadmap
 
 - Some quality of life utilities like `$.throttle`
+- Update `$.buffer` to only fire when full
 - Operator `$.while` to repeat a chain until a condition is met (e.g. retry failed http request).
 - A `$.listen.select`, that is automatically reactive.
 - Break down `Chain` type into `SyncChain`, `AsyncChain`, `WeakChain`, `AsyncWeakChain`, which allows to merge `$.evaluate.sync` and `$.evaluate.async` into a single `$.evaluate` and statically predict the possible outcome types.
