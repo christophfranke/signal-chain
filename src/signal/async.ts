@@ -1,30 +1,30 @@
-import type { Chain, CleanupExec } from './types'
+import type { Chain, CleanupExec, ChainType, AsyncChain, AsyncWeakChain } from './types'
 import { chain } from './chain'
 
 import { execute } from './util'
 
 
 export interface AwaitCall {
-    <V1, V2>(element1: Chain<V1, Promise<V2>>): Chain<V1, V2 | Error>
-    <V1, V2, V3>(element1: Chain<V1, V2>, element2: Chain<V2, Promise<V3>>): Chain<V1, V3 | Error>
-    <V1, V2, V3, V4>(element1: Chain<V1, V2>, element2: Chain<V2, V3>, element3: Chain<V3, Promise<V4>>): Chain<V1, V4 | Error>
-    <V1, V2, V3, V4, V5>(element1: Chain<V1, V2>, element2: Chain<V2, V3>, element3: Chain<V3, V4>, element4: Chain<V4, Promise<V5>>): Chain<V1, V5 | Error>
-    <V1, V2, V3, V4, V5, V6>(element1: Chain<V1, V2>, element2: Chain<V2, V3>, element3: Chain<V3, V4>, element4: Chain<V4, V5>, element5: Chain<V5, Promise<V6>>): Chain<V1, V6 | Error>
-    <V1, V2, V3, V4, V5, V6, V7>(element1: Chain<V1, V2>, element2: Chain<V2, V3>, element3: Chain<V3, V4>, element4: Chain<V4, V5>, element5: Chain<V5, V6>, element6: Chain<V6, Promise<V7>>): Chain<V1, V7 | Error>
-    <V1, V2, V3, V4, V5, V6, V7, V8>(element1: Chain<V1, V2>, element2: Chain<V2, V3>, element3: Chain<V3, V4>, element4: Chain<V4, V5>, element5: Chain<V5, V6>, element6: Chain<V6, V7>, element7: Chain<V7, Promise<V8>>): Chain<V1, V8 | Error>
-    <V1, V2, V3, V4, V5, V6, V7, V8, V9>(element1: Chain<V1, V2>, element2: Chain<V2, V3>, element3: Chain<V3, V4>, element4: Chain<V4, V5>, element5: Chain<V5, V6>, element6: Chain<V6, V7>, element7: Chain<V7, V8>, element8: Chain<V8, Promise<V9>>): Chain<V1, V9 | Error>
-    <V1, V2, V3, V4, V5, V6, V7, V8, V9, V10>(element1: Chain<V1, V2>, element2: Chain<V2, V3>, element3: Chain<V3, V4>, element4: Chain<V4, V5>, element5: Chain<V5, V6>, element6: Chain<V6, V7>, element7: Chain<V7, V8>, element8: Chain<V8, V9>, element9: Chain<V9, Promise<V10>>): Chain<V1, V10 | Error>
-    <V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11>(element1: Chain<V1, V2>, element2: Chain<V2, V3>, element3: Chain<V3, V4>, element4: Chain<V4, V5>, element5: Chain<V5, V6>, element6: Chain<V6, V7>, element7: Chain<V7, V8>, element8: Chain<V8, V9>, element9: Chain<V9, V10>, element10: Chain<V10, Promise<V11>>): Chain<V1, V11 | Error>
-    <V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12>(element1: Chain<V1, V2>, element2: Chain<V2, V3>, element3: Chain<V3, V4>, element4: Chain<V4, V5>, element5: Chain<V5, V6>, element6: Chain<V6, V7>, element7: Chain<V7, V8>, element8: Chain<V8, V9>, element9: Chain<V9, V10>, element10: Chain<V10, V11>, element11: Chain<V11, Promise<V12>>): Chain<V1, V12 | Error>
-    <V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13>(element1: Chain<V1, V2>, element2: Chain<V2, V3>, element3: Chain<V3, V4>, element4: Chain<V4, V5>, element5: Chain<V5, V6>, element6: Chain<V6, V7>, element7: Chain<V7, V8>, element8: Chain<V8, V9>, element9: Chain<V9, V10>, element10: Chain<V10, V11>, element11: Chain<V11, V12>, element12: Chain<V12, Promise<V13>>): Chain<V1, V13 | Error>
-    <V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14>(element1: Chain<V1, V2>, element2: Chain<V2, V3>, element3: Chain<V3, V4>, element4: Chain<V4, V5>, element5: Chain<V5, V6>, element6: Chain<V6, V7>, element7: Chain<V7, V8>, element8: Chain<V8, V9>, element9: Chain<V9, V10>, element10: Chain<V10, V11>, element11: Chain<V11, V12>, element12: Chain<V12, V13>, element13: Chain<V13, Promise<V14>>): Chain<V1, V14 | Error>
-    <V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15>(element1: Chain<V1, V2>, element2: Chain<V2, V3>, element3: Chain<V3, V4>, element4: Chain<V4, V5>, element5: Chain<V5, V6>, element6: Chain<V6, V7>, element7: Chain<V7, V8>, element8: Chain<V8, V9>, element9: Chain<V9, V10>, element10: Chain<V10, V11>, element11: Chain<V11, V12>, element12: Chain<V12, V13>, element13: Chain<V13, V14>, element14: Chain<V14, Promise<V15>>): Chain<V1, V15 | Error>
-    <V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16>(element1: Chain<V1, V2>, element2: Chain<V2, V3>, element3: Chain<V3, V4>, element4: Chain<V4, V5>, element5: Chain<V5, V6>, element6: Chain<V6, V7>, element7: Chain<V7, V8>, element8: Chain<V8, V9>, element9: Chain<V9, V10>, element10: Chain<V10, V11>, element11: Chain<V11, V12>, element12: Chain<V12, V13>, element13: Chain<V13, V14>, element14: Chain<V14, V15>, element15: Chain<V15, Promise<V16>>): Chain<V1, V16 | Error>
-    <V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17>(element1: Chain<V1, V2>, element2: Chain<V2, V3>, element3: Chain<V3, V4>, element4: Chain<V4, V5>, element5: Chain<V5, V6>, element6: Chain<V6, V7>, element7: Chain<V7, V8>, element8: Chain<V8, V9>, element9: Chain<V9, V10>, element10: Chain<V10, V11>, element11: Chain<V11, V12>, element12: Chain<V12, V13>, element13: Chain<V13, V14>, element14: Chain<V14, V15>, element15: Chain<V15, V16>, element16: Chain<V16, Promise<V17>>): Chain<V1, V17 | Error>
-    <V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18>(element1: Chain<V1, V2>, element2: Chain<V2, V3>, element3: Chain<V3, V4>, element4: Chain<V4, V5>, element5: Chain<V5, V6>, element6: Chain<V6, V7>, element7: Chain<V7, V8>, element8: Chain<V8, V9>, element9: Chain<V9, V10>, element10: Chain<V10, V11>, element11: Chain<V11, V12>, element12: Chain<V12, V13>, element13: Chain<V13, V14>, element14: Chain<V14, V15>, element15: Chain<V15, V16>, element16: Chain<V16, V17>, element17: Chain<V17, Promise<V18>>): Chain<V1, V18 | Error>
-    <V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19>(element1: Chain<V1, V2>, element2: Chain<V2, V3>, element3: Chain<V3, V4>, element4: Chain<V4, V5>, element5: Chain<V5, V6>, element6: Chain<V6, V7>, element7: Chain<V7, V8>, element8: Chain<V8, V9>, element9: Chain<V9, V10>, element10: Chain<V10, V11>, element11: Chain<V11, V12>, element12: Chain<V12, V13>, element13: Chain<V13, V14>, element14: Chain<V14, V15>, element15: Chain<V15, V16>, element16: Chain<V16, V17>, element17: Chain<V17, V18>, element18: Chain<V18, Promise<V19>>): Chain<V1, V19 | Error>
-    <V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20>(element1: Chain<V1, V2>, element2: Chain<V2, V3>, element3: Chain<V3, V4>, element4: Chain<V4, V5>, element5: Chain<V5, V6>, element6: Chain<V6, V7>, element7: Chain<V7, V8>, element8: Chain<V8, V9>, element9: Chain<V9, V10>, element10: Chain<V10, V11>, element11: Chain<V11, V12>, element12: Chain<V12, V13>, element13: Chain<V13, V14>, element14: Chain<V14, V15>, element15: Chain<V15, V16>, element16: Chain<V16, V17>, element17: Chain<V17, V18>, element18: Chain<V18, V19>, element19: Chain<V19, Promise<V20>>): Chain<V1, V20 | Error>
-
+    <V1, V2>(element1: Chain<V1, Promise<V2>, 'sync' | 'async'>): AsyncChain<V1, V2 | Error>
+    <V1, V2>(element1: Chain<V1, Promise<V2>, ChainType>): AsyncWeakChain<V1, V2 | Error>
+    <V1, V2, V3>(element1: Chain<V1, Promise<V2>, 'sync' | 'async'>, element2: Chain<V2, Promise<V3>, 'sync' | 'async'>): AsyncChain<V1, V3 | Error>
+    <V1, V2, V3>(element1: Chain<V1, Promise<V2>, ChainType>, element2: Chain<V2, Promise<V3>, ChainType>): AsyncWeakChain<V1, V3 | Error>
+    <V1, V2, V3, V4>(element1: Chain<V1, Promise<V2>, 'sync' | 'async'>, element2: Chain<V2, Promise<V3>, 'sync' | 'async'>, element3: Chain<V3, Promise<V4>, 'sync' | 'async'>): AsyncChain<V1, V4 | Error>
+    <V1, V2, V3, V4>(element1: Chain<V1, Promise<V2>, ChainType>, element2: Chain<V2, Promise<V3>, ChainType>, element3: Chain<V3, Promise<V4>, ChainType>): AsyncWeakChain<V1, V4 | Error>
+    <V1, V2, V3, V4, V5>(element1: Chain<V1, Promise<V2>, 'sync' | 'async'>, element2: Chain<V2, Promise<V3>, 'sync' | 'async'>, element3: Chain<V3, Promise<V4>, 'sync' | 'async'>, element4: Chain<V4, Promise<V5>, 'sync' | 'async'>): AsyncChain<V1, V5 | Error>
+    <V1, V2, V3, V4, V5>(element1: Chain<V1, Promise<V2>, ChainType>, element2: Chain<V2, Promise<V3>, ChainType>, element3: Chain<V3, Promise<V4>, ChainType>, element4: Chain<V4, Promise<V5>, ChainType>): AsyncWeakChain<V1, V5 | Error>
+    <V1, V2, V3, V4, V5, V6>(element1: Chain<V1, Promise<V2>, 'sync' | 'async'>, element2: Chain<V2, Promise<V3>, 'sync' | 'async'>, element3: Chain<V3, Promise<V4>, 'sync' | 'async'>, element4: Chain<V4, Promise<V5>, 'sync' | 'async'>, element5: Chain<V5, Promise<V6>, 'sync' | 'async'>): AsyncChain<V1, V6 | Error>
+    <V1, V2, V3, V4, V5, V6>(element1: Chain<V1, Promise<V2>, ChainType>, element2: Chain<V2, Promise<V3>, ChainType>, element3: Chain<V3, Promise<V4>, ChainType>, element4: Chain<V4, Promise<V5>, ChainType>, element5: Chain<V5, Promise<V6>, ChainType>): AsyncWeakChain<V1, V6 | Error>
+    <V1, V2, V3, V4, V5, V6, V7>(element1: Chain<V1, Promise<V2>, 'sync' | 'async'>, element2: Chain<V2, Promise<V3>, 'sync' | 'async'>, element3: Chain<V3, Promise<V4>, 'sync' | 'async'>, element4: Chain<V4, Promise<V5>, 'sync' | 'async'>, element5: Chain<V5, Promise<V6>, 'sync' | 'async'>, element6: Chain<V6, Promise<V7>, 'sync' | 'async'>): AsyncChain<V1, V7 | Error>
+    <V1, V2, V3, V4, V5, V6, V7>(element1: Chain<V1, Promise<V2>, ChainType>, element2: Chain<V2, Promise<V3>, ChainType>, element3: Chain<V3, Promise<V4>, ChainType>, element4: Chain<V4, Promise<V5>, ChainType>, element5: Chain<V5, Promise<V6>, ChainType>, element6: Chain<V6, Promise<V7>, ChainType>): AsyncWeakChain<V1, V7 | Error>
+    <V1, V2, V3, V4, V5, V6, V7, V8>(element1: Chain<V1, Promise<V2>, 'sync' | 'async'>, element2: Chain<V2, Promise<V3>, 'sync' | 'async'>, element3: Chain<V3, Promise<V4>, 'sync' | 'async'>, element4: Chain<V4, Promise<V5>, 'sync' | 'async'>, element5: Chain<V5, Promise<V6>, 'sync' | 'async'>, element6: Chain<V6, Promise<V7>, 'sync' | 'async'>, element7: Chain<V7, Promise<V8>, 'sync' | 'async'>): AsyncChain<V1, V8 | Error>
+    <V1, V2, V3, V4, V5, V6, V7, V8>(element1: Chain<V1, Promise<V2>, ChainType>, element2: Chain<V2, Promise<V3>, ChainType>, element3: Chain<V3, Promise<V4>, ChainType>, element4: Chain<V4, Promise<V5>, ChainType>, element5: Chain<V5, Promise<V6>, ChainType>, element6: Chain<V6, Promise<V7>, ChainType>, element7: Chain<V7, Promise<V8>, ChainType>): AsyncWeakChain<V1, V8 | Error>
+    <V1, V2, V3, V4, V5, V6, V7, V8, V9>(element1: Chain<V1, Promise<V2>, 'sync' | 'async'>, element2: Chain<V2, Promise<V3>, 'sync' | 'async'>, element3: Chain<V3, Promise<V4>, 'sync' | 'async'>, element4: Chain<V4, Promise<V5>, 'sync' | 'async'>, element5: Chain<V5, Promise<V6>, 'sync' | 'async'>, element6: Chain<V6, Promise<V7>, 'sync' | 'async'>, element7: Chain<V7, Promise<V8>, 'sync' | 'async'>, element8: Chain<V8, Promise<V9>, 'sync' | 'async'>): AsyncChain<V1, V9 | Error>
+    <V1, V2, V3, V4, V5, V6, V7, V8, V9>(element1: Chain<V1, Promise<V2>, ChainType>, element2: Chain<V2, Promise<V3>, ChainType>, element3: Chain<V3, Promise<V4>, ChainType>, element4: Chain<V4, Promise<V5>, ChainType>, element5: Chain<V5, Promise<V6>, ChainType>, element6: Chain<V6, Promise<V7>, ChainType>, element7: Chain<V7, Promise<V8>, ChainType>, element8: Chain<V8, Promise<V9>, ChainType>): AsyncWeakChain<V1, V9 | Error>
+    <V1, V2, V3, V4, V5, V6, V7, V8, V9, V10>(element1: Chain<V1, Promise<V2>, 'sync' | 'async'>, element2: Chain<V2, Promise<V3>, 'sync' | 'async'>, element3: Chain<V3, Promise<V4>, 'sync' | 'async'>, element4: Chain<V4, Promise<V5>, 'sync' | 'async'>, element5: Chain<V5, Promise<V6>, 'sync' | 'async'>, element6: Chain<V6, Promise<V7>, 'sync' | 'async'>, element7: Chain<V7, Promise<V8>, 'sync' | 'async'>, element8: Chain<V8, Promise<V9>, 'sync' | 'async'>, element9: Chain<V9, Promise<V10>, 'sync' | 'async'>): AsyncChain<V1, V10 | Error>
+    <V1, V2, V3, V4, V5, V6, V7, V8, V9, V10>(element1: Chain<V1, Promise<V2>, ChainType>, element2: Chain<V2, Promise<V3>, ChainType>, element3: Chain<V3, Promise<V4>, ChainType>, element4: Chain<V4, Promise<V5>, ChainType>, element5: Chain<V5, Promise<V6>, ChainType>, element6: Chain<V6, Promise<V7>, ChainType>, element7: Chain<V7, Promise<V8>, ChainType>, element8: Chain<V8, Promise<V9>, ChainType>, element9: Chain<V9, Promise<V10>, ChainType>): AsyncWeakChain<V1, V10 | Error>
+    <V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11>(element1: Chain<V1, Promise<V2>, 'sync' | 'async'>, element2: Chain<V2, Promise<V3>, 'sync' | 'async'>, element3: Chain<V3, Promise<V4>, 'sync' | 'async'>, element4: Chain<V4, Promise<V5>, 'sync' | 'async'>, element5: Chain<V5, Promise<V6>, 'sync' | 'async'>, element6: Chain<V6, Promise<V7>, 'sync' | 'async'>, element7: Chain<V7, Promise<V8>, 'sync' | 'async'>, element8: Chain<V8, Promise<V9>, 'sync' | 'async'>, element9: Chain<V9, Promise<V10>, 'sync' | 'async'>, element10: Chain<V10, Promise<V11>, 'sync' | 'async'>): AsyncChain<V1, V11 | Error>
+    <V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11>(element1: Chain<V1, Promise<V2>, ChainType>, element2: Chain<V2, Promise<V3>, ChainType>, element3: Chain<V3, Promise<V4>, ChainType>, element4: Chain<V4, Promise<V5>, ChainType>, element5: Chain<V5, Promise<V6>, ChainType>, element6: Chain<V6, Promise<V7>, ChainType>, element7: Chain<V7, Promise<V8>, ChainType>, element8: Chain<V8, Promise<V9>, ChainType>, element9: Chain<V9, Promise<V10>, ChainType>, element10: Chain<V10, Promise<V11>, ChainType>): AsyncWeakChain<V1, V11 | Error>
 
     (first: Chain<unknown, unknown>, ...elements: Chain<unknown, unknown>[]): Chain<unknown | Error, unknown>
 }
@@ -36,6 +36,7 @@ export interface AwaitCall {
  * @param ...
  * @param elementN element chain to create a promise
  */
+// @ts-expect-error
 export const awaitParallel: AwaitCall = (listen1: Chain<unknown, unknown>, ...additionalListeners: Chain<unknown, unknown>[]): Chain<unknown, unknown | Error> => {
     const listen = chain(listen1, ...additionalListeners)
 
@@ -82,6 +83,7 @@ export const awaitParallel: AwaitCall = (listen1: Chain<unknown, unknown>, ...ad
  * @param ...
  * @param elementN element chain to create a promise
  */
+// @ts-expect-error
 export const awaitLatest: AwaitCall = (listen1: Chain<unknown, unknown>, ...additionalListeners: Chain<unknown, unknown>[]): Chain<unknown, unknown> => {
     const listen = chain(listen1, ...additionalListeners)
 
@@ -121,6 +123,7 @@ export const awaitLatest: AwaitCall = (listen1: Chain<unknown, unknown>, ...addi
  * @param ...
  * @param elementN element chain to create a promise
  */
+// @ts-expect-error
 export const awaitOrder: AwaitCall = (listen1: Chain<unknown, unknown>, ...additionalListeners: Chain<unknown, unknown>[]): Chain<unknown, unknown> => {
     const listen = chain(listen1, ...additionalListeners)
 
@@ -176,6 +179,7 @@ export const awaitOrder: AwaitCall = (listen1: Chain<unknown, unknown>, ...addit
  * @param ...
  * @param elementN element chain to create a promise
  */
+// @ts-expect-error
 export const awaitQueue: AwaitCall = (listen1: Chain<unknown, unknown>, ...additionalListeners: Chain<unknown, unknown>[]): Chain<unknown, unknown> => {
     const listen = chain(listen1, ...additionalListeners)
 
@@ -231,6 +235,7 @@ export const awaitQueue: AwaitCall = (listen1: Chain<unknown, unknown>, ...addit
  * @param ...
  * @param elementN element chain to create a promise
  */
+// @ts-expect-error
 export const awaitBlock: AwaitCall = (listen1: Chain<unknown, unknown>, ...additionalListeners: Chain<unknown, unknown>[]): Chain<unknown, unknown> => {
     const listen = chain(listen1, ...additionalListeners) as Chain<unknown, Promise<unknown>>
 

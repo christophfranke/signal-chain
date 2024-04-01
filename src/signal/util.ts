@@ -23,3 +23,4 @@ export const execute = (something: unknown, ...arg: unknown[]): unknown => {
   console.warn('unable to execute', something)
   // throw new Error('unable to execute')
 }
+

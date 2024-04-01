@@ -10,7 +10,8 @@ describe('evaluate', () => {
         $.emit(1),
         $.await.latest(
             $.select(x => Promise.resolve(x))
-        )
+        ),
+        $.type.not.isError()
     )
 
     const incompleteChain = $.chain(
@@ -30,7 +31,7 @@ describe('evaluate', () => {
     })
 
     it('should evaluate synchonously', async () => {
-        const result = await $.evaluate(syncChain)
+        const result = $.evaluate(syncChain)
         expect(result).toBe(1)
     })
 

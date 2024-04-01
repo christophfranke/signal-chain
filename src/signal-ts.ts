@@ -12,7 +12,7 @@ import { each } from './signal/each'
 import { combine } from './signal/combine'
 import { maybeKey, maybeSelect } from './signal/maybe'
 import { connect } from './signal/connect'
-import { evaluateAsync, evaluateSync, toFunctionSync, toFunctionAsync } from './signal/evaluate'
+import { evaluate, toFunction } from './signal/evaluate'
 import { listenToEvent } from './signal/event'
 import { merge } from './signal/merge'
 import { assert as createAssert,
@@ -86,16 +86,6 @@ const listen = {
   event: listenToEvent,
 }
 
-const evaluate = {
-  sync: evaluateSync,
-  async: evaluateAsync
-}
-
-const func = {
-  sync: toFunctionSync,
-  async: toFunctionAsync
-}
-
 
 const debounce = <V>(ms: number) => chain(
   select<V>(),
@@ -117,7 +107,7 @@ export default {
   type,
   maybe,
   evaluate,
-  function: func,
+  function: toFunction,
 
   // adapters
   // solid,

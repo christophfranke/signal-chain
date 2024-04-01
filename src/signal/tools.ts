@@ -1,4 +1,4 @@
-import type { NextFn, AsyncChain, SyncChain, IncompleteChain, Chain, Function1 } from './types'
+import type { NextFn, SyncChain, WeakChain, Chain, Function1 } from './types'
 
 
 /**
@@ -26,7 +26,7 @@ export function emit<V, Input = void>(parameter: V): SyncChain<Input, V> {
  *
  * @param condition The condition to evaluate.
  */
-export function passIf<V>(condition: Function1<V, boolean>): IncompleteChain<V> {
+export function passIf<V>(condition: Function1<V, boolean>): WeakChain<V> {
   return (next: NextFn<V>, parameter: V) => {
     if (condition(parameter)) {
       return next(parameter)
@@ -39,7 +39,7 @@ export function passIf<V>(condition: Function1<V, boolean>): IncompleteChain<V> 
  *
  * @param condition The condition to evaluate.
  */
-export function stopIf<V>(condition: Function1<V, boolean>): IncompleteChain<V> {
+export function stopIf<V>(condition: Function1<V, boolean>): WeakChain<V> {
   return (next: NextFn<V>, parameter: V) => {
     if (!condition(parameter)) {
       return next(parameter)
@@ -63,7 +63,7 @@ export function passUnique<V>(): SyncChain<V> {
 /**
  * Stops the chain
  */
-export function stop<V>(): IncompleteChain<V, never> {
+export function stop<V>(): WeakChain<V, never> {
   return () => {}
 }
 

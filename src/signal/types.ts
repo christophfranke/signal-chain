@@ -40,14 +40,17 @@ export type NextFn<V> = (value: V) => CleanupExec
 export type Context = {
   [key: string]: any
 }
-export type ChainType = 'sync' | 'async' | 'incomplete'
-export type ChainStatus<CT extends ChainType> = {
-  type: CT
+export type ChainType = 'sync' | 'async' | 'incomplete' | 'async-incomplete'
+export type ChainStatus<CT extends ChainType = ChainType> = {
+  is: CT
 }
 export type Chain<From, To = From, CT extends ChainType = ChainType> = (next: NextFn<To>, parameter: From, context: Context, status: ChainStatus<CT>) => CleanupExec
-export type SyncChain<From, To = From> = Chain<From, To, 'sync'>
-export type AsyncChain<From, To = From> = Chain<From, To, 'async'>
-export type IncompleteChain<From, To = From> = Chain<From, To, 'incomplete'>
-export type ConnectedChain<From, To> = (next: NextFn<To>, parameter: From) => CleanupExec
+export type SyncChain<From, To = From> = Chain<From, To, 'sync' | 'async' | 'incomplete' | 'async-incomplete'>
+export type AsyncChain<From, To = From> = Chain<From, To, 'async' | 'async-incomplete'>
+export type WeakChain<From, To = From> = Chain<From, To, 'incomplete' | 'async-incomplete'>
+export type AsyncWeakChain<From, To = From> = Chain<From, To, 'async-incomplete'>
 
+export type ConnectedChain<From, To> = (next: NextFn<To>, parameter: From) => CleanupExec
+export type Test = AsyncChain<number, number> extends SyncChain<number, number> ? true : false
+export type Test2 = SyncChain<number, number> extends AsyncChain<number, number> ? true : false
 
