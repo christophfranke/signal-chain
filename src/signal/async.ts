@@ -43,6 +43,7 @@ export const awaitParallel: AwaitCall = (listen1: Chain<unknown, unknown>, ...ad
 
     return (next, value, context, status) => {
         let cleanupInner: CleanupExec
+        status.is = 'async'
 
         if (!context.isInitialized) {
             context.isActive = true
@@ -63,11 +64,13 @@ export const awaitParallel: AwaitCall = (listen1: Chain<unknown, unknown>, ...ad
             (promise as Promise<unknown>).then(value => {
                 if (context.isActive) {
                     execute(context.cleanupNext)
+                    status.is = 'sync'
                     context.cleanupNext = next(value)
                 }
             }).catch(error => {
                 if (context.isActive) {
                     execute(context.cleanupNext)
+                    status.is = 'sync'
                     context.cleanupNext = next(error)
                 }
             })
@@ -92,6 +95,7 @@ export const awaitLatest: AwaitCall = (listen1: Chain<unknown, unknown>, ...addi
         let cleanupInner: CleanupExec
         let cleanupNext: CleanupExec
         let isActive = true
+        status.is = 'async'
 
         const cleanupFunction = (final: boolean = false) => {
             isActive = false
@@ -103,11 +107,13 @@ export const awaitLatest: AwaitCall = (listen1: Chain<unknown, unknown>, ...addi
             (promise as Promise<unknown>).then(value => {
                 if (isActive) {
                     execute(cleanupNext)
+                    status.is = 'sync'
                     cleanupNext = next(value)
                 }
             }).catch(error => {
                 if (isActive) {
                     execute(cleanupNext)
+                    status.is = 'sync'
                     cleanupNext = next(error)
                 }
             })
@@ -130,6 +136,8 @@ export const awaitOrder: AwaitCall = (listen1: Chain<unknown, unknown>, ...addit
 
     return (next, value, context, status) => {
         let cleanupInner: CleanupExec
+        status.is = 'async'
+
         if (!context.isInitialized) {
             context.queue = []
             context.isActive = true
@@ -153,12 +161,14 @@ export const awaitOrder: AwaitCall = (listen1: Chain<unknown, unknown>, ...addit
                 .then(result => {
                     if (context.isActive) {
                         execute(context.cleanupNext)
+                        status.is = 'sync'
                         context.cleanupNext = next(result)
                     }
                 })
                 .catch(error => {
                     if (context.isActive) {
                         execute(context.cleanupNext)
+                        status.is = 'sync'
                         context.cleanupNext = next(error)
                     }
                 })
@@ -186,6 +196,8 @@ export const awaitQueue: AwaitCall = (listen1: Chain<unknown, unknown>, ...addit
 
     return (next, parameter, context, status) => {
         let cleanupInner: CleanupExec
+        status.is = 'async'
+
         if (!context.isInitialized) {
             context.queue = []
             context.isActive = true
@@ -211,12 +223,14 @@ export const awaitQueue: AwaitCall = (listen1: Chain<unknown, unknown>, ...addit
             .then(promise => promise).then(value => {
                 if (context.isActive) {
                     execute(context.cleanupNext, false)
+                    status.is = 'sync'
                     context.cleanupNext = next(value)
                 }
             })
             .catch(error => {
                 if (context.isActive) {
                     execute(context.cleanupNext, false)
+                    status.is = 'sync'
                     context.cleanupNext = next(error)
                 }
             })
@@ -254,6 +268,7 @@ export const awaitBlock: AwaitCall = (listen1: Chain<unknown, unknown>, ...addit
 
         let isActive = true
         let cleanupInner: CleanupExec
+        status.is = 'async'
 
         const cleanupFunction = (final: boolean = false) => {
             if (final) {

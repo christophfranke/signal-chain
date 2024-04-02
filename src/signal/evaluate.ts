@@ -26,7 +26,7 @@ export interface EvaluateCall {
 export const evaluate: EvaluateCall = (listen1: Chain<any, any>, ...additionalListeners: Chain<any, any>[]): any => {
     const chained = chain(listen1, ...additionalListeners) as Chain<void, any>
     let unsubscribe: CleanupExec
-    const status = { is: 'async' } as ChainStatus
+    const status = { is: 'sync' } as ChainStatus
 
     let result = undefined
     const promise = new Promise(resolve => {
@@ -42,11 +42,15 @@ export const evaluate: EvaluateCall = (listen1: Chain<any, any>, ...additionalLi
         return result
     }
 
-    promise.then(() => {
-        execute(unsubscribe)
-    })
+    if (status.is === 'async') {
+        promise.then(() => {
+            execute(unsubscribe)
+        })
 
-    return promise
+        return promise
+    }
+
+    console.error('Invalid status', status)
 }
 
 export interface FunctionCall {

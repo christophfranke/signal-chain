@@ -27,10 +27,12 @@ export function emit<V, Input = void>(parameter: V): SyncChain<Input, V> {
  * @param condition The condition to evaluate.
  */
 export function passIf<V>(condition: Function1<V, boolean>): WeakChain<V> {
-  return (next: NextFn<V>, parameter: V) => {
+  return (next: NextFn<V>, parameter: V, _, status: any) => {
     if (condition(parameter)) {
       return next(parameter)
     }
+
+    status.is = 'incomplete'
   }
 }
 
@@ -40,10 +42,12 @@ export function passIf<V>(condition: Function1<V, boolean>): WeakChain<V> {
  * @param condition The condition to evaluate.
  */
 export function stopIf<V>(condition: Function1<V, boolean>): WeakChain<V> {
-  return (next: NextFn<V>, parameter: V) => {
+  return (next: NextFn<V>, parameter: V, _, status: any) => {
     if (!condition(parameter)) {
       return next(parameter)
     }
+
+    status.is = 'incomplete'
   }
 }
 
@@ -51,12 +55,14 @@ export function stopIf<V>(condition: Function1<V, boolean>): WeakChain<V> {
  * Passes the value if it is different from the last value
  */
 export function passUnique<V>(): SyncChain<V> {
-  return (next: NextFn<V>, parameter: V, context) => {
+  return (next: NextFn<V>, parameter: V, context, status: any) => {
     if (context.last !== parameter) {
       context.last = parameter
 
       return next(parameter)
     }
+
+    status.is = 'incomplete'
   }
 }
 
@@ -64,7 +70,9 @@ export function passUnique<V>(): SyncChain<V> {
  * Stops the chain
  */
 export function stop<V>(): WeakChain<V, never> {
-  return () => {}
+  return (_, __, ___, status: any) => {
+    status.is = 'incomplete'
+  }
 }
 
 /**
