@@ -25,10 +25,9 @@ export function objectListener<O extends Object, Key extends keyof O>(obj: O, ke
     if (!signals[key as string]) {
         signals[key as string] = primitive.create(obj[key])
 
-        let isArray = false
+        let isArray = Array.isArray(obj[key])
         let observableArray: any = []
-        if (Array.isArray(obj[key])) {
-            isArray = true
+        if (isArray) {
             observableArray = observeArray(obj[key] as any, signals[key as string].update)
         }
 
@@ -41,8 +40,9 @@ export function objectListener<O extends Object, Key extends keyof O>(obj: O, ke
                 return signals[key as string].value
             },
             set(newValue: O[Key]) {
-                if (Array.isArray(newValue)) {
-                    observableArray = observeArray(newValue, signals[key as string].update)
+                isArray = Array.isArray(newValue)
+                if (isArray) {
+                    observableArray = observeArray(newValue as [], signals[key as string].update)
                 }
                 // console.log('update object', { [key]: newValue })
                 signals[key as string].update(newValue)
