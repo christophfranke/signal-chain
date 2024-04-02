@@ -392,10 +392,8 @@ Additionally, **Signal-Chain** includes these operators:
 ### Breaking out of the Chain
 
 For compatibility with the rest of the Javascript world, there are two utility functions:
-- `$.evaluate`: Evaluates a chain.
-- `$.function`: Creates a function from a chain.
 
-`$.evaluate` is creates a one-shot evaluation of a *Chain*.
+`$.evaluate` evaluates a *Chain* as a one-shot.
 ```typescript
 const counter = $.primitive.create(0)
 
@@ -404,7 +402,7 @@ counter.value = 10
 console.log($.evaluate(counter.listen)) // logs: 10
 ```
 
-While `$.function` creates a function that internally evaluates the *Chain*.
+`$.function` creates a function that internally evaluates the *Chain*.
 ```typescript
 const double = $.chain(
    $.select(x => x * 2)
@@ -467,7 +465,8 @@ This can be especially useful when you want to use the primitive as a queue to p
 
 ### Integration with Frontend Frameworks
 
-**Signal-Chain** can be used with SolidJS, using the wrapper `signal-chain-solid`: https://www.npmjs.com/package/signal-chain-solid
+**Signal-Chain** can be used with SolidJS, using the wrapper `signal-chain-solid`:
+https://www.npmjs.com/package/signal-chain-solid
 
 ### Documentation
 
