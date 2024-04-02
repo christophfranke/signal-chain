@@ -370,24 +370,66 @@ const somechain = $.chain(
 ) // somechain is inferred as Chain<void, boolean>
 ```
 
-Additionally, **Signal-Chain** includes these operators:
+### Operators
 
-- `$.catch`: Catches errors and passes them on as values.
+Here is a list of all operators available in **Signal-Chain**:
+
+**Basic Operators**
+- `$.emit`: Emits a value.
+- `$.select`: Selects a new value from an incoming value.
+- `$.maybe.select`: Selects if the value is not undefined or null.
+- `$.effect`: Executes a side effect.
+- `$.log`: Logs the incoming value.
+- `$.catch`: Catches errors in the *inner Chain* and passes them on as values.
 - `$.count`: Counts the number of incoming values.
+- `$.merge`: Merges multiple chains into a single one. Result is the latest value of the chain that fired, left is evaluated before right.
+- `$.combine`: Combines multiple chains into a single one. Result is an array of the latest value of each chain.
+
+**Async Operators**
+- `$.await.latest`: Waits for the latest promise to resolve.
+- `$.await.parallel`: Passes on each resolved value as soon as it resolves.
+- `$.await.order`: Passes on resolved values in the order they were requested.
+- `$.await.block`: Will only enter the inner block when no promise is pending. Incoming values will be discarded.
+- `$.await.queue`: Will only enter the inner block when no promise is pending. Incoming values will be queued and processed by the inner block once the pending promise is resolved.
+
+**Array Operators**
 - `$.collect`: Collects all incoming values.
+- `$.buffer`: Buffers incoming values.
+- `$.window`: Collects incoming values showing a window of the last [n] values as array.
+- `$.each`: Applies a chain to each element of an array.
+
+**Reactive Operators**
+- `$.listen.key`: Listens to a key of an object.
 - `$.listen.event`: Listens to DOM Events.
-- `$.merge`: Merges multiple chains into a single one.
-- `$.debounce`: Debounces the incoming values.
+- `$.maybe.listen.key`: Listens to a key if the value is not undefined or null.
+
+**Flow Control Operators**
 - `$.stop`: Stops the chain.
 - `$.passIf`: Passes on the value if the condition is met.
 - `$.stopIf`: Stops the chain if the condition is met.
 - `$.ifNot`: Negation of `$.if` without fallback.
 - `$.passUnique`: Passes only unique values.
+- `$.debounce`: Debounces the incoming values. Incoming Errors will not be debounced.
+
+**Type Operators**
 - `$.type.is`: Creates a custom type assertion from a type predicate function.
 - `$.type.not.is`: Creates a custom negated type assertion from a type predicate function.
-- `$.maybe.select`: Selects if the value is not undefined or null.
-- `$.maybe.listen.key`: Listens to a key if the value is not undefined or null.
-- `$.listen.event`: Listen to DOM events.
+- `$.type.isNothing`: Enters *inner Chain* if type is `null` or `undefined`.
+- `$.type.isNumber`: Enters *inner Chain* if type is `number`.
+- `$.type.isArray`: Enters *inner Chain* if type is `Array`.
+- `$.type.isBoolean`: Enters *inner Chain* if type is `boolean`.
+- `$.type.isString`: Enters *inner Chain* if type is `string`.
+- `$.type.isFunction`: Enters *inner Chain* if type is `Function`.
+- `$.type.isObject`: Enters *inner Chain* if type is `Object`.
+- `$.type.isError`: Enters *inner Chain* if type is `Error`.
+- `$.type.not.isNothing`: Enters *inner Chain* if type is not `null` or `undefined`.
+- `$.type.not.isNumber`: Enters *inner Chain* if type is not `number`.
+- `$.type.not.isArray`: Enters *inner Chain* if type is not `Array`.
+- `$.type.not.isBoolean`: Enters *inner Chain* if type is not `boolean`.
+- `$.type.not.isString`: Enters *inner Chain* if type is not `string`.
+- `$.type.not.isFunction`: Enters *inner Chain* if type is not `Function`.
+- `$.type.not.isObject`: Enters *inner Chain* if type is not `Object`.
+- `$.type.not.isError`: Enters *inner Chain* if type is not `Error`.
 
 ### Breaking out of the Chain
 
@@ -482,10 +524,8 @@ This is a very new library and there is no guarantee that the API is stable. Ple
 ### Roadmap
 
 - Some quality of life utilities like `$.throttle`
-- Update `$.buffer` to only fire when full
 - Operator `$.while` to repeat a chain until a condition is met (e.g. retry failed http request).
 - A `$.listen.select`, that is automatically reactive.
 - Add integration wrappers for VueJS and React.
 - `$.await.select` operator for more intuitive promise chaining.
-
 

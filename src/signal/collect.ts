@@ -1,4 +1,6 @@
 import type { SyncChain, Function2 } from './types'
+import { passIf } from './tools'
+import { chain } from './chain'
 
 export interface CollectCall {
   /**
@@ -32,21 +34,27 @@ export const collect: CollectCall = <V1, V2>(keep?: Function2<V2, V1, V2>, initi
   }
 }
 
-/**
- * Collects [n] values into an array. The array will be reset after [n] values.
- *
- * @param size of the buffer
- */
-export const buffer = <V>(size: number) => collect<V, V[]>((collection, value) => {
-  collection.push(value)
-  if (collection.length > size) {
+const bufferCollection = <V>(size: number) => collect<V, V[]>((collection, value) => {
+  if (collection.length >= size) {
     return [value]
   }
+
+  collection.push(value)
   return collection
 }, [])
 
 /**
- * Collects the last [n] values into an array.
+ * Collects [n] values into an array, then fires.
+ *
+ * @param size of the buffer
+ */
+export const buffer = <V>(size: number) => chain(
+  bufferCollection<V>(size),
+  passIf(buffer => buffer.length === size),
+)
+
+/**
+ * Collects the last [n] values into an array. Fires on each value received.
  *
  * @param size of the window
  */
