@@ -59,6 +59,6 @@ describe('if', () => {
            )
         )
 
-        expect($.evaluate.sync($.emit(1), format)).toBe('We have an apple')
+        expect($.evaluate($.emit(1), format)).toBe('We have an apple')
     })
 })

@@ -1,7 +1,7 @@
-import type { NextFn, Chain } from './types'
+import type { NextFn, SyncChain } from './types'
 
 
-export function effect<V>(sideEffect: NextFn<V>): Chain<V> {
+export function effect<V>(sideEffect: NextFn<V>): SyncChain<V> {
   return (resolve: NextFn<V>, parameter: V) => {
     return [
       sideEffect(parameter),

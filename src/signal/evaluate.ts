@@ -1,4 +1,4 @@
-import type { Chain, SyncChain, AsyncChain, WeakChain, AsyncWeakChain, ChainType, CleanupExec, Function1, ChainStatus } from "./types"
+import type { Chain, SyncChain, AsyncChain, WeakChain, AsyncWeakChain, CleanupExec, Function1, ChainStatus } from "./types"
 import { chain } from "./chain"
 import { execute } from "./util"
 import { emit } from './tools'

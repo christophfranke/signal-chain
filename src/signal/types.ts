@@ -52,6 +52,5 @@ export type AsyncWeakChain<From, To = From> = Chain<From, To, 'async-incomplete'
 export type AnyChain<From, To = From> = Chain<From, To, any>
 
 export type ConnectedChain<From, To> = (next: NextFn<To>, parameter: From) => CleanupExec
-export type Test = AsyncChain<number, number> extends SyncChain<number, number> ? true : false
-export type Test2 = SyncChain<number, number> extends AsyncChain<number, number> ? true : false
+
 

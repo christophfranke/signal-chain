@@ -1,4 +1,4 @@
-import { CleanupExec, Chain } from './types'
+import { CleanupExec, AsyncChain } from './types'
 import { execute } from './util'
 
 export interface HasAddEventListener {
@@ -6,12 +6,12 @@ export interface HasAddEventListener {
 }
 
 
-export const listenToEvent = <Target extends HasAddEventListener | void, EventName extends EventList['name']>(event: EventName): Chain<Target, InferEventType<EventName>> => {
-    return (resolve, target) => {
+export const listenToEvent = <Target extends HasAddEventListener | void, EventName extends EventList['name']>(event: EventName): AsyncChain<Target, InferEventType<EventName>> => {
+    return (next, target) => {
         let cleanup: CleanupExec
         const listener = (e: any) => {
             execute(cleanup)
-            cleanup = resolve(e)
+            cleanup = next(e)
         }
 
         (target as HasAddEventListener ?? window).addEventListener(event, listener)
@@ -173,5 +173,8 @@ type EventList = {
     name:
         'scroll'
     type: UIEvent
+} | {
+    name: string
+    type: CustomEvent
 }
 

@@ -54,11 +54,12 @@ export const connect: ConnectCall = (listen1: AnyChain<any, any>, ...additionalL
   }
 
   const context = {}
+  const status = { is: 'sync' } as any
   let unsubscribe = [
     chained((value: any) => {
       currentValue = value
       applyListeners()
-    }, undefined, context)
+    }, undefined, context, status)
   ]
 
   const disconnect = () => {

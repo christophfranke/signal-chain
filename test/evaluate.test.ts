@@ -18,25 +18,30 @@ describe('evaluate', () => {
         $.stop()
     )
 
+    const asyncWeakChain = $.chain(
+        $.await.latest(
+            $.stop()
+        )
+    )
+
     it('should evaluate synchronously', () => {
         expect($.evaluate(syncChain)).toBe(1)
     })
 
-    it('should return an error when synchronously evaluating an async chain', () => {
-        expect($.evaluate(asyncChain)).toBeInstanceOf(Error)
+    it('evaluate the async chain', async () => {
+        expect(await $.evaluate(asyncChain)).toBe(1)
     })
 
-    it('should return an error when synchronously evaluating a incomplete chain', () => {
-        expect($.evaluate(incompleteChain)).toBeInstanceOf(Error)
+    it('should return undefined when incomplete', () => {
+        expect($.evaluate(incompleteChain)).toBe(undefined)
+    })
+
+    it('should evaluate undefined on async weak', async () => {
+        expect(await $.evaluate(asyncWeakChain)).toBe(undefined)
     })
 
     it('should evaluate synchonously', async () => {
         const result = $.evaluate(syncChain)
-        expect(result).toBe(1)
-    })
-
-    it('should evaluate asynchrounously', async () => {
-        const result = await $.evaluate(asyncChain)
         expect(result).toBe(1)
     })
 
@@ -58,6 +63,16 @@ describe('evaluate', () => {
 
         const result = await fn(0)
         expect(result).toBe(1)
+    })
+
+    it('should create a function that may or may not evaluate', () => {
+        const fn = $.function(
+            $.select<number>(),
+            $.passIf(x => x > 0)
+        )
+
+        expect(fn(0)).toBe(undefined)
+        expect(fn(1)).toBe(1)
     })
 })
 
