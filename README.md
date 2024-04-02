@@ -96,6 +96,14 @@ const logSquare = $.chain(
 )
 ```
 
+The *Chain* is broken down into multiple subtypes:
+- `SyncChain`: This *Chain* executes **synchronously** and will **complete**
+- `AsyncChain`: This *Chain* executes **asynchronously** and will **complete**
+- `WeakChain`: This *Chain* executes **synchronously**, but may **not complete**
+- `AsyncWeakChain`: This *Chain* executes **asynchronously** and may **not complete**
+
+These types give static hints about the behaviour of the *Chain* and when used with `$.evaluate` or `$.function` will produce slightly different results.
+
 Once we connect the chain, it will start listening to the counter. Note that it executes immediately and synchronously on connection.
 ```typescript
 const disconnect = $.connect(logSquare) // logs: 1
@@ -381,13 +389,36 @@ Additionally, **Signal-Chain** includes these operators:
 - `$.maybe.listen.key`: Listens to a key if the value is not undefined or null.
 - `$.listen.event`: Listen to DOM events.
 
+### Breaking out of the Chain
 
-**Signal-Chain** also includes a few utility functions:
-- `$.evaluate.sync`: Evaluates a chain synchronously.
-- `$.evaluate.async`: Evaluates a chain asynchronously.
-- `$.function.sync`: Creates a synchronous function from a chain.
-- `$.function.async`: Creates an asynchronous function from a chain.
-- `$.config`: Configures the update behaviour of the library.
+For compatibility with the rest of the Javascript world, there are two utility functions:
+- `$.evaluate`: Evaluates a chain.
+- `$.function`: Creates a function from a chain.
+
+`$.evaluate` is creates a one-shot evaluation of a *Chain*.
+```typescript
+const counter = $.primitive.create(0)
+
+console.log($.evaluate(counter.listen)) // logs: 0
+counter.value = 10
+console.log($.evaluate(counter.listen)) // logs: 10
+```
+
+While `$.function` creates a function that internally evaluates the *Chain*.
+```typescript
+const double = $.chain(
+   $.select(x => x * 2)
+)
+
+const doubleFunction = $.function(double)
+console.log(doubleFunction(5)) // logs: 10
+```
+
+Depending on the type of the chain, the result of `$.evaluate` and `$.function` will be slightly different:
+- `SyncChain`: Will return the value of the chain.
+- `AsyncChain`: Will return a promise that resolves to the value of the chain.
+- `WeakChain`: Will return the value of the chain, or `undefined` if the chain did not complete.
+- `AsyncWeakChain`: Will return a promise that resolves to the value or `undefined`, or `undefined` if the chain did not complete. This is because the chain may or may not complete before or after it becomes asynchronous.
 
 ### Controlling Update Behaviour
 
@@ -455,7 +486,6 @@ This is a very new library and there is no guarantee that the API is stable. Ple
 - Update `$.buffer` to only fire when full
 - Operator `$.while` to repeat a chain until a condition is met (e.g. retry failed http request).
 - A `$.listen.select`, that is automatically reactive.
-- Break down `Chain` type into `SyncChain`, `AsyncChain`, `WeakChain`, `AsyncWeakChain`, which allows to merge `$.evaluate.sync` and `$.evaluate.async` into a single `$.evaluate` and statically predict the possible outcome types.
 - Add integration wrappers for VueJS and React.
 - `$.await.select` operator for more intuitive promise chaining.
 
