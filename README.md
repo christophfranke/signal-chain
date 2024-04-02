@@ -518,7 +518,6 @@ This was a brief overview of the **Signal-Chain** library. There is an effort to
 
 This is a very new library and there is no guarantee that the API is stable. Please use with caution and report any issues you encounter.
 
-- When listening to an object key, and the key had an array type, but is now being assigned a non-array, the application throws an error unsupported.
 - The interface design of `$.if` makes it impossible to infer the type of the condition, making it necessary to specify the type of the condition explicitly.
 
 ### Roadmap
@@ -528,4 +527,4 @@ This is a very new library and there is no guarantee that the API is stable. Ple
 - A `$.listen.select`, that is automatically reactive.
 - Add integration wrappers for VueJS and React.
 - `$.await.select` operator for more intuitive promise chaining.
-
+- Operator `$.cache` to cache the values using a key function.

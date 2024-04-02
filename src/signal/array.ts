@@ -1,5 +1,4 @@
-import { PrimitiveSignal } from './types'
-import * as primitive from './primitive'
+import { NextFn } from "./types"
 
 // list of methods that modify the array
 const methods: PropertyKey[] = [
@@ -14,27 +13,32 @@ const methods: PropertyKey[] = [
     'unshift'
 ]
 
-export const observableArray = <T>(base: T[]): PrimitiveSignal<T[]> => {
-    // @ts-expect-error do not create a new signal if on already exists
-    if (base.__signal__) {
-        // @ts-expect-error do  not create a new signal if on already exists
-        return base.__signal__
+export const observeArray = <T>(base: T[], update: any): T[] => {
+    // @ts-expect-error idempotent
+    if (base.__listen__) {
+        // @ts-expect-error
+        base.__listen__(update)
+        return base
     }
 
-    const signal = primitive.create(base)
-
-
+    let listeners = [update]
     const handler = {
+        // @ts-ignore
         get(target: T[], prop: PropertyKey, receiver: any) {
-            if (prop === '__signal__') {
-                return signal
+            if (prop === '__listen__') {
+                return (newUpdate: NextFn<T[]>) => {
+                    listeners.push(newUpdate)
+                    return () => {
+                        listeners = listeners.filter(fn => fn !== newUpdate)
+                    }
+                }
             }
 
             const reflection = Reflect.get(target, prop, receiver)
             if (typeof reflection === 'function' && methods.includes(prop)) {
                 return function(...args: any[]) {
                     const result = reflection.apply(target, args)
-                    signal.update(target)
+                    listeners.forEach(fn => fn(target))
 
                     return result
                 }
@@ -44,17 +48,12 @@ export const observableArray = <T>(base: T[]): PrimitiveSignal<T[]> => {
 
         set(target: T[], prop: PropertyKey, value: any, receiver: any): boolean {
             const result = Reflect.set(target, prop, value, receiver)
-            // console.log('set array ', { prop: target })
-            signal.update(target)
+
+            listeners.forEach(fn => fn(target))
             return result
         }
     }
 
-    return {
-        ...signal,
-        get value() {
-            return new Proxy(signal.value, handler)
-        }
-    }
+    return new Proxy(base, handler)
 }
 

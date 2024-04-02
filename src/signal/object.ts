@@ -1,6 +1,6 @@
 import type { NextFn, ConnectedChain, PrimitiveSignal } from './types'
 import * as primitive from './primitive'
-import { observableArray } from './array'
+import { observeArray } from './array'
 
 export function key<O extends Object, Key extends keyof O>(key: Key): ConnectedChain<O, O[Key]> {
     return (next: NextFn<O[Key]>, obj: O) => {
@@ -23,23 +23,26 @@ export function objectListener<O extends Object, Key extends keyof O>(obj: O, ke
     // Use an existing signal if available, or create a new one
     const signals: Record<string, PrimitiveSignal<O[Key]>> = (obj as any).__signals__;
     if (!signals[key as string]) {
-        const value = obj[key]
+        signals[key as string] = primitive.create(obj[key])
+
         let isArray = false
-        if (Array.isArray(value)) {
+        let observableArray: any = []
+        if (Array.isArray(obj[key])) {
             isArray = true
-            signals[key as string] = observableArray(value) as any
-        } else {
-            signals[key as string] = primitive.create(obj[key])
+            observableArray = observeArray(obj[key] as any, signals[key as string].update)
         }
 
         Object.defineProperty(obj, key, {
             get() {
                 // console.log('get object', { [key]: signals[key as string].value })
+                if (isArray) {
+                    return observableArray
+                }
                 return signals[key as string].value
             },
             set(newValue: O[Key]) {
-                if (Array.isArray(newValue) !== isArray) {
-                    throw new Error('Not implemented yet: Cannot change type of array')
+                if (Array.isArray(newValue)) {
+                    observableArray = observeArray(newValue, signals[key as string].update)
                 }
                 // console.log('update object', { [key]: newValue })
                 signals[key as string].update(newValue)
