@@ -528,3 +528,5 @@ This is a very new library and there is no guarantee that the API is stable. Ple
 - Add integration wrappers for VueJS and React.
 - `$.await.select` operator for more intuitive promise chaining.
 - Operator `$.cache` to cache the values using a key function.
+- `$.reactive` to create reactive objects that are also iteratable.
+- `$.list` to create reactive lists that have fine grained updates for add/remove/update operations
