@@ -68,7 +68,7 @@ describe('reactive objects', () => {
         expect(bArray).toEqual(['I', 'am', 'an', 'array', 'too', '!'])
     })
 
-    it('', async () => {
+    it('works', async () => {
         const obj = {
             a: 5,
             b: {
@@ -106,6 +106,53 @@ describe('reactive objects', () => {
 
         // has not been collected yet, still in buffer
         expect(multiplication.value).toBe([5, 6, 7].join(', '))
+    })
+
+    it('works with arrays', async () => {
+        const state = {
+            list: [] as number[]
+        }
+
+        const result = $.primitive.connect(
+            $.emit(state),
+            $.listen.key('list'),
+        )
+
+        const other = $.primitive.connect(
+            $.emit(state),
+            $.listen.key('list'),
+        )
+
+        state.list.push(1)
+
+        await Promise.resolve()
+        expect(result.value).toEqual([1])
+        expect(other.value).toEqual([1])
+
+        state.list = []
+
+        await Promise.resolve()
+        expect(result.value).toEqual([])
+        expect(other.value).toEqual([])
+
+        state.list.push(2)
+
+        await Promise.resolve()
+        expect(result.value).toEqual([2])
+        expect(other.value).toEqual([2])
+
+        state.list.push(3)
+
+        await Promise.resolve()
+        expect(result.value).toEqual([2, 3])
+        expect(other.value).toEqual([2, 3])
+
+        state.list = [3]
+        state.list.push(4)
+
+        await Promise.resolve()
+        expect(result.value).toEqual([3, 4])
+        expect(other.value).toEqual([3, 4])
     })
 })
 
