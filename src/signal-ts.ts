@@ -10,7 +10,7 @@ import { awaitParallel, awaitLatest, awaitOrder, awaitQueue, awaitBlock } from '
 import { collect, buffer, window } from './signal/collect'
 import { each } from './signal/each'
 import { combine } from './signal/combine'
-import { maybeKey, maybeSelect } from './signal/maybe'
+import { maybeKey, maybeSelect,maybeChain } from './signal/maybe'
 import { connect } from './signal/connect'
 import { evaluate, toFunction } from './signal/evaluate'
 import { listenToEvent } from './signal/event'
@@ -63,6 +63,7 @@ const type = {
 
 const maybe = {
   select: maybeSelect,
+  chain: maybeChain,
   listen: {
     key: maybeKey
   }

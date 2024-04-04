@@ -23,3 +23,5 @@ export const maybeSelect = <V1, Filter extends V1 & (null | undefined), From ext
     return resolve(value as Filter)
   }
 }
+
+export const maybeChain = isNotNothing
