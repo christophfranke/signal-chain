@@ -18,10 +18,10 @@ export interface CombineCall {
 // @ts-expect-error
 export const combine: CombineCall = <From, To>(...listens: Chain<From, To>[]): Chain<From, To[]> => {
     if (listens.length === 0) {
-        return (resolve: NextFn<To[]>, value: any) => resolve([value])
+        return (next: NextFn<To[]>, value: any) => next([value])
     }
 
-    return (resolve: NextFn<To[]>, parameter: From, context: any, status: any) => {
+    return (next: NextFn<To[]>, parameter: From, context: any, status: any) => {
         for(let i = 0; i < listens.length; i++) {
             if (!context[i]) {
                 context[i] = {}
@@ -44,15 +44,15 @@ export const combine: CombineCall = <From, To>(...listens: Chain<From, To>[]): C
               return
             }
 
-            return [
-                cleanup,
-                resolve(values),
-            ]
+            execute(pendingCleanup)
+            pendingCleanup = next(values)
+
+            return cleanup
         }
 
         const unsubscribe = listens.map((listener, i) => listener(value => updateItem(value, i), parameter, context[i], status))
         updateReady = true
-        pendingCleanup = resolve(values)
+        pendingCleanup = next(values)
 
         return [unsubscribe, cleanup]
     }
