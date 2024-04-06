@@ -1,7 +1,7 @@
 import $ from '../src/signal-ts'
 import { describe, it, expect } from 'vitest'
 
-describe('pass if changed', () => {
+describe('unique', () => {
     it('should only pass if the value has changed', async () => {
         const input = $.primitive.create('init')
         const changed = $.primitive.connect(
@@ -100,6 +100,123 @@ describe('pass if changed', () => {
 
         someNumber.value = 1
         expect(changes.value).toBe(3)
+    })
+
+    it('should pass and cleanup properly for unique.select', () => {
+        const someNumber = $.primitive.create(1, { update: 'sync' })
+        let effect = 0
+        let cleanup = 0
+        let final = false
+
+        const disconnect = $.connect(
+            someNumber.listen,
+            $.unique.select(x => Math.round(x)),
+            $.effect(() => {
+                effect++
+                return (f) => {
+                    cleanup++
+                    final = f ?? false
+                }
+            })
+        )
+
+        expect(cleanup).toBe(0)
+        expect(effect).toBe(1)
+        expect(final).toBe(false)
+
+        someNumber.value = 1.1
+        expect(cleanup).toBe(0)
+        expect(effect).toBe(1)
+        expect(final).toBe(false)
+
+        someNumber.value = 1.9
+        expect(cleanup).toBe(1)
+        expect(effect).toBe(2)
+        expect(final).toBe(false)
+
+        disconnect()
+        expect(cleanup).toBe(2)
+        expect(effect).toBe(2)
+        expect(final).toBe(true)
+    })
+
+    it('should pass and cleanup properly for unique.chain', () => {
+        const someNumber = $.primitive.create(1, { update: 'sync' })
+        let effect = 0
+        let cleanup = 0
+        let final = false
+
+        const disconnect = $.connect(
+            $.unique.chain(
+                someNumber.listen,
+                $.select(x => Math.round(x)),
+            ),
+            $.effect(() => {
+                effect++
+                return (f) => {
+                    cleanup++
+                    final = f ?? false
+                }
+            })
+        )
+
+        expect(cleanup).toBe(0)
+        expect(effect).toBe(1)
+        expect(final).toBe(false)
+
+        someNumber.value = 1.1
+        expect(cleanup).toBe(0)
+        expect(effect).toBe(1)
+        expect(final).toBe(false)
+
+        someNumber.value = 1.9
+        expect(cleanup).toBe(1)
+        expect(effect).toBe(2)
+        expect(final).toBe(false)
+
+        disconnect()
+        expect(cleanup).toBe(2)
+        expect(effect).toBe(2)
+        expect(final).toBe(true)
+    })
+
+    it('should pass and cleanup properly for unique.pass', () => {
+        const someNumber = $.primitive.create(1, { update: 'sync' })
+        let effect = 0
+        let cleanup = 0
+        let final = false
+
+        const disconnect = $.connect(
+            someNumber.listen,
+            $.select(x => Math.round(x)),
+            $.unique.pass(),
+            $.effect(() => {
+                effect++
+                return (f) => {
+                    cleanup++
+                    final = f ?? false
+                }
+            })
+        )
+
+        expect(cleanup).toBe(0)
+        expect(effect).toBe(1)
+        expect(final).toBe(false)
+
+        someNumber.value = 1.1
+        expect(cleanup).toBe(0)
+        expect(effect).toBe(1)
+        expect(final).toBe(false)
+
+        someNumber.value = 1.9
+        expect(cleanup).toBe(1)
+        expect(effect).toBe(2)
+        expect(final).toBe(false)
+
+        disconnect()
+        expect(cleanup).toBe(2)
+        expect(effect).toBe(2)
+        expect(final).toBe(true)
     })
 })
 

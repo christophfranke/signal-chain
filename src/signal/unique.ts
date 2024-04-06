@@ -11,14 +11,14 @@ export function passUnique<V>(): SyncChain<V> {
       context.last = parameter
 
       execute(context.cleanup)
-      next(parameter)
+      context.cleanup = next(parameter)
     }
 
     status.is = 'incomplete'
 
     return final => {
       if (final) {
-        execute(context.cleanup)
+        execute(context.cleanup, true)
       }
     }
   }
@@ -31,14 +31,14 @@ export function selectUnique<V, U>(mapping: (value: V) => U): SyncChain<V, U> {
       context.last = mappedValue
 
       execute(context.cleanup)
-      next(mappedValue)
+      context.cleanup = next(mappedValue)
     }
 
     status.is = 'incomplete'
 
     return final => {
       if (final) {
-        execute(context.cleanup)
+        execute(context.cleanup, true)
       }
     }
   }
@@ -63,7 +63,7 @@ export const uniqueValue: ChainCall = (
 
       return final => {
         if (final) {
-          execute(cleanup)
+          execute(cleanup, true)
         }
       }
     }, param, context, status)
