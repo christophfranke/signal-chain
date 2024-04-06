@@ -10,4 +10,6 @@ export function effect<V>(sideEffect: NextFn<V>): SyncChain<V> {
   }
 }
 // log the signal at any point
-export const log = <V>(message?: string) => effect<V>(value => console.log(message ?? 'Signal.log:', value))
+export const log = <V>(...messages: any[]) => effect<V>(
+  value => console.log(...(messages.length === 0 ? ['Signal.log:'] : messages), value)
+)
