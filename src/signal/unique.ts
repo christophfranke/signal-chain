@@ -1,5 +1,5 @@
 import { ChainCall, chain } from "./chain"
-import type { Chain, SyncChain, NextFn } from "./types"
+import type { Chain, SyncChain, NextFn, CleanupExec } from "./types"
 import { execute } from "./util"
 
 /**
@@ -50,19 +50,22 @@ export const uniqueValue: ChainCall = (
   ...elements: (Chain<unknown, unknown> | undefined)[]
 ): Chain<unknown, unknown>  => {
   const chained = chain(first, ...elements)
-  return (next, param, context, status) =>
-    chained((value) => {
-      if (context.last !== value) {
-        context.last = value
+  return (next, param, context, status) => {
+    let last = [] as any
+    let cleanup: CleanupExec
+    return chained((value) => {
+      if (last.length === 0 || last[0] !== value) {
+        last[0] = value
 
-        execute(context.cleanup)
-        context.cleanup = next(value)
+        execute(cleanup)
+        cleanup = next(value)
       }
 
       return final => {
         if (final) {
-          execute(context.cleanup)
+          execute(cleanup)
         }
       }
     }, param, context, status)
+  }
 }

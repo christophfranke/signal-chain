@@ -407,13 +407,14 @@ Here is a list of all operators available in **Signal-Chain**:
 - `$.stop`: Stops the chain.
 - `$.passIf`: Passes on the value if the condition is met.
 - `$.stopIf`: Stops the chain if the condition is met.
+- `$.if`: Conditional execution of a chain.
 - `$.ifNot`: Negation of `$.if` without fallback.
 - `$.debounce`: Debounces the incoming values. Incoming Errors will not be debounced.
 
 **Efficiency Operators**
 - `$.unique.select`: Select value, only pass on if mapped value is unique
 - `$.unique.pass`: Passes only unique values.
-- `$.uniqe.chain`: Execute chain, only pass on if result is unique.
+- `$.uniqe.chain`: Only pass on if result of the *inner Chain* is unique. Fires always receives new value.
 
 **Type Operators**
 - `$.type.is`: Creates a custom type assertion from a type predicate function.
@@ -523,7 +524,7 @@ This was a brief overview of the **Signal-Chain** library. There is an effort to
 This is a very new library and there is no guarantee that the API is stable. Please use with caution and report any issues you encounter.
 
 - The interface design of `$.if` makes it impossible to infer the type of the condition, making it necessary to specify the type of the condition explicitly.
-- `$.passIf` and `$.stopIf` can lead to unexpected cleanup behaviour, in some cases not correctly calling the final cleanup.
+- `$.passIf`, `$.stopIf` and `$.stop` can lead to unexpected cleanup behaviour, in some cases not correctly calling the final cleanup.
 
 ### Roadmap
 

@@ -82,6 +82,25 @@ describe('pass if changed', () => {
         changes.disconnect()
         expect(destroyed).toBe(2)
     })
+
+    it('should always fire when receiving a new value', () => {
+        const someNumber = $.primitive.create(1, { update: 'sync' })
+        const changes = $.primitive.connect(
+            someNumber.listen,
+            $.unique.chain(
+                $.select(x => Math.round(x))
+            ),
+            $.count()
+        )
+
+        expect(changes.value).toBe(1)
+
+        someNumber.value = 1.1
+        expect(changes.value).toBe(2)
+
+        someNumber.value = 1
+        expect(changes.value).toBe(3)
+    })
 })
 
 
