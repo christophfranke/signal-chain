@@ -31,6 +31,57 @@ describe('pass if changed', () => {
         await Promise.resolve()
         expect(changed.value).toBe(3)
     })
+
+    it('should wrap the unique chain', () => {
+        const someNumber = $.primitive.create(1, { update: 'sync' })
+
+        const changes = $.primitive.connect(
+            $.uniqueValue(
+                someNumber.listen,
+                $.select(x => Math.round(x))
+            ),
+            $.count()
+        )
+
+        expect(changes.value).toBe(1)
+
+        someNumber.value = 1.1
+        expect(changes.value).toBe(1)
+
+        someNumber.value = 1.9
+        expect(changes.value).toBe(2)
+
+        someNumber.value = 2.1
+        expect(changes.value).toBe(2)
+    })
+
+    it('should not cleanup effects later in chain', () => {
+        const someNumber = $.primitive.create(1, { update: 'sync' })
+
+        let destroyed = 0
+        const changes = $.primitive.connect(
+            $.uniqueValue(
+                someNumber.listen,
+                $.select(x => Math.round(x))
+            ),
+            $.effect(() => {
+                return () => {
+                    destroyed++
+                }
+            })
+        )
+
+        expect(destroyed).toBe(0)
+
+        someNumber.value = 1.1
+        expect(destroyed).toBe(0)
+
+        someNumber.value = 1.9
+        expect(destroyed).toBe(1)
+
+        changes.disconnect()
+        expect(destroyed).toBe(2)
+    })
 })
 
 

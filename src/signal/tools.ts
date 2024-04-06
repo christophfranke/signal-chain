@@ -52,21 +52,6 @@ export function stopIf<V>(condition: Function1<V, boolean>): WeakChain<V> {
 }
 
 /**
- * Passes the value if it is different from the last value
- */
-export function passUnique<V>(): SyncChain<V> {
-  return (next: NextFn<V>, parameter: V, context, status: any) => {
-    if (context.last !== parameter) {
-      context.last = parameter
-
-      return next(parameter)
-    }
-
-    status.is = 'incomplete'
-  }
-}
-
-/**
  * Stops the chain
  */
 export function stop<V>(): WeakChain<V, never> {

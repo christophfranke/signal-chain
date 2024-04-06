@@ -1,6 +1,7 @@
 export * from './signal/types'
 
-import { emit, select, stopIf, stop, passIf, passUnique, count } from './signal/tools'
+import { emit, select, stopIf, stop, passIf, count } from './signal/tools'
+import { passUnique, uniqueValue } from './signal/unique'
 import { ifFn, ifNot } from './signal/if'
 import { chain, sidechain } from './signal/chain'
 import { connect as connectPrimitive, create as createPrimitive, setConfig } from './signal/primitive'
@@ -142,6 +143,7 @@ export default {
   merge,
   if: ifFn,
   ifNot,
+  uniqueValue,
   // missing:
   // while
   // cache

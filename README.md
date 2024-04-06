@@ -410,6 +410,7 @@ Here is a list of all operators available in **Signal-Chain**:
 - `$.ifNot`: Negation of `$.if` without fallback.
 - `$.passUnique`: Passes only unique values.
 - `$.debounce`: Debounces the incoming values. Incoming Errors will not be debounced.
+- `$.uniqueValue`: Passes only unique values from inner chain.
 
 **Type Operators**
 - `$.type.is`: Creates a custom type assertion from a type predicate function.
@@ -519,6 +520,7 @@ This was a brief overview of the **Signal-Chain** library. There is an effort to
 This is a very new library and there is no guarantee that the API is stable. Please use with caution and report any issues you encounter.
 
 - The interface design of `$.if` makes it impossible to infer the type of the condition, making it necessary to specify the type of the condition explicitly.
+- `$.passIf` and `$.stopIf` can lead to unexpected cleanup behaviour, in some cases not correctly calling the final cleanup.
 
 ### Roadmap
 
