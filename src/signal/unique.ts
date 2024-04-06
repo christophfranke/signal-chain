@@ -24,6 +24,26 @@ export function passUnique<V>(): SyncChain<V> {
   }
 }
 
+export function selectUnique<V, U>(mapping: (value: V) => U): SyncChain<V, U> {
+  return (next: NextFn<U>, parameter: V, context, status: any) => {
+    const mappedValue = mapping(parameter)
+    if (context.last !== mappedValue) {
+      context.last = mappedValue
+
+      execute(context.cleanup)
+      next(mappedValue)
+    }
+
+    status.is = 'incomplete'
+
+    return final => {
+      if (final) {
+        execute(context.cleanup)
+      }
+    }
+  }
+}
+
 // @ts-expect-error
 export const uniqueValue: ChainCall = (
   first: Chain<unknown, unknown>,

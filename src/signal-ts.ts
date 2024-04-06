@@ -1,7 +1,7 @@
 export * from './signal/types'
 
 import { emit, select, stopIf, stop, passIf, count } from './signal/tools'
-import { passUnique, uniqueValue } from './signal/unique'
+import { passUnique, uniqueValue, selectUnique } from './signal/unique'
 import { ifFn, ifNot } from './signal/if'
 import { chain, sidechain } from './signal/chain'
 import { connect as connectPrimitive, create as createPrimitive, setConfig } from './signal/primitive'
@@ -88,6 +88,12 @@ const listen = {
   event: listenToEvent,
 }
 
+const unique = {
+  chain: uniqueValue,
+  pass: passUnique,
+  select: selectUnique,
+}
+
 
 const debounce = <V>(ms: number) => chain(
   select<V>(),
@@ -108,8 +114,7 @@ export default {
   await: awaitFns,
   type,
   maybe,
-  evaluate,
-  function: toFunction,
+  unique,
 
   // adapters
   // solid,
@@ -143,7 +148,6 @@ export default {
   merge,
   if: ifFn,
   ifNot,
-  uniqueValue,
   // missing:
   // while
   // cache
@@ -153,10 +157,13 @@ export default {
   buffer,
   window,
   sidechain,
-  passUnique,
   debounce,
   // missing:
   // throttle
   // interval
+
+  // util
+  evaluate,
+  function: toFunction,
 }
 

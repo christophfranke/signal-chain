@@ -408,9 +408,12 @@ Here is a list of all operators available in **Signal-Chain**:
 - `$.passIf`: Passes on the value if the condition is met.
 - `$.stopIf`: Stops the chain if the condition is met.
 - `$.ifNot`: Negation of `$.if` without fallback.
-- `$.passUnique`: Passes only unique values.
 - `$.debounce`: Debounces the incoming values. Incoming Errors will not be debounced.
-- `$.uniqueValue`: Passes only unique values from inner chain.
+
+**Efficiency Operators**
+- `$.unique.select`: Select value, only pass on if mapped value is unique
+- `$.unique.pass`: Passes only unique values.
+- `$.uniqe.chain`: Execute chain, only pass on if result is unique.
 
 **Type Operators**
 - `$.type.is`: Creates a custom type assertion from a type predicate function.

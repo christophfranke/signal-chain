@@ -6,7 +6,7 @@ describe('pass if changed', () => {
         const input = $.primitive.create('init')
         const changed = $.primitive.connect(
             input.listen,
-            $.passUnique(),
+            $.unique.pass(),
             $.count()
         )
 
@@ -36,7 +36,7 @@ describe('pass if changed', () => {
         const someNumber = $.primitive.create(1, { update: 'sync' })
 
         const changes = $.primitive.connect(
-            $.uniqueValue(
+            $.unique.chain(
                 someNumber.listen,
                 $.select(x => Math.round(x))
             ),
@@ -60,7 +60,7 @@ describe('pass if changed', () => {
 
         let destroyed = 0
         const changes = $.primitive.connect(
-            $.uniqueValue(
+            $.unique.chain(
                 someNumber.listen,
                 $.select(x => Math.round(x))
             ),
