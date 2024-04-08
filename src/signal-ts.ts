@@ -13,7 +13,7 @@ import { each } from './signal/each'
 import { combine } from './signal/combine'
 import { maybeKey, maybeSelect,maybeChain } from './signal/maybe'
 import { connect } from './signal/connect'
-import { evaluate, toFunction } from './signal/evaluate'
+import { evaluate, toFunction, toComputed } from './signal/evaluate'
 import { listenToEvent } from './signal/event'
 import { merge } from './signal/merge'
 import { assert as createAssert,
@@ -165,5 +165,6 @@ export default {
   // util
   evaluate,
   function: toFunction,
+  computed: toComputed,
 }
 

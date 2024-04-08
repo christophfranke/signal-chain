@@ -74,5 +74,20 @@ describe('evaluate', () => {
         expect(fn(0)).toBe(undefined)
         expect(fn(1)).toBe(1)
     })
+
+    it('should create a computed', async () => {
+        const fn = $.computed(
+            $.select<number>(),
+            $.await.latest(
+                $.select(x => Promise.resolve(x + 1))
+            ),
+            $.type.not.isError()
+        )
+
+        expect(fn(0)).toBe(undefined)
+
+        await new Promise(resolve => setTimeout(resolve))
+        expect(fn(0)).toBe(1)
+    })
 })
 
