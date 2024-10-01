@@ -34,7 +34,7 @@ document.getElementById('my-input')?.addEventListener('input', (event) => {
 // Once it is connected and a signal arrives,
 // the signal will traverse the chain from top to bottom producing a result
 const fetchData = $.chain(
-   input.listen, // listen to changes
+   input.listen, // when the chain is connected, this will fire on every input change
    $.if(input => input.length > 2,
       $.await.latest( // will discard all results but the latest
          // make http request to search endpoint whenever user input is changed
@@ -500,7 +500,7 @@ Here is a list of all operators available in **Signal-Chain**:
 - `$.error.log`: Logs a passing Error value.
 - `$.error.handle`: Enters the *inner Chain* when passing an Error value.
 - `$.error.discard`: Turns an Error value into and undefined.
-- `$.error.log.panik`: Throws incoming Error value and breaks the chain.
+- `$.error.panik`: Throws incoming Error value and breaks the chain.
 
 **Array Operators**
 - `$.collect`: Collects all incoming values.
