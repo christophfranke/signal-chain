@@ -31,19 +31,22 @@ document.getElementById('my-input')?.addEventListener('input', (event) => {
 
 // fetchData is a Chain that can fetch data from the server
 // Until it is connected, it will not do anything (like a function definition)
-// When it is connected and a signal arrives,
-// the signal will traverse the chain from top to bottom, producing an output
+// Once it is connected and a signal arrives,
+// the signal will traverse the chain from top to bottom, potentially producing output
 const fetchData = $.chain(
    input.listen, // listen to changes
    $.if(input => input.length > 2,
-      $.await.latest(
+      $.await.latest( // will discard all results but the latest
          // make http request to search endpoint whenever user input is changed
-         $.select(input => fetch(`/api/search?q=${input}`).then(res => res.json())),
+         $.select(
+            input => fetch(`/api/search?q=${input}`).then(res => res.json() as string[])
+         ),
       ),
       $.emit([]) // fallback to empty array if input is too short
    ),
    $.error.handle(
       $.error.log('API request failed:')
+      $.effect(error => window.alert(`Error: ${error.toString()}`))
       $.stop() // stop execution of chain here
    )
 )
@@ -54,19 +57,43 @@ const fetchData = $.chain(
 // and write all output to the serverData primitive until disconnected.
 const serverData = $.primitive.connect(fetchData)
 
-// Here we define a chain inline and immediately connect it
-// Because this time we don't care for the output,
-// we do not create a primitive and use $.connect instead
+// let's presume we have a filter string that can be changed by the user
+const filter = $.primitive.create('some filter string')
+
+// We combine the server data and the filter to produce the filtered results
+// With $.primitive.connect we can define the chain inline.
+// It will be connected immediately
+const filteredResults = $.primitive.connect(
+   $.combine(serverData.listen, filter.listen),
+   $.select(([data, filter]) => data.filter(elem => elem.includes(filter)))
+)
+
+// let's define a reactive timer
+const timer = $.primitive.create(0)
+const intervalId = setInterval(() => { timer.value += 1 }, 1000) // update every second
+
+// If we do not care about the resulting values
+// We can use $.connect to connect a chain
+// Here we can also define the chain inline
 const disconnect = $.connect(
-   serverData.listen, // listen to incoming data
-   $.effect(searchResults => {
-      // do something with the data
-      console.log('new search results:', searchResults)
-   })
+   timer.listen,
+   $.await.parallel( // executes and resolves all promises as they come in
+      // post tracking data to server
+      $.select(() => fetch('/api/tracking/impressions', {
+         method: 'POST',
+         data: JSON.stringify(filteredResults.value)
+      })),
+   ),
+   $.error.discard(), // we want only success here
+   $.if(res => res?.status == 200,
+      $.effect(() => console.log('Impression request success'))
+   )
 )
 
 serverData.disconnect() // stop fetching
-disconnect() // stop logging
+filteredResults.disconnect() // stop filtering
+disconnect() // stop sending tracking data
+clearInterval(intervalId) // stop timer
 ```
 
 When a *Chain* is *connected*, a *Signal* of runs from top to bottom through the *Chain*. Each *Operator* can change, delay, or stop the *Signal*. Some *Operators*, like the *listener* can trigger a new *Signal*. *Chains* can have output data, that can be stored in a *Primitive*. *Chains* can also have input data, like a function or a procedure that needs some arguments to run. *Chains* can also be chained together into new *Chains*, making them flexible and reusable. *Primitives*, *Operators* and *Chains* are fully typed and types are automatically inferred, making it impossible to chain incompatible data.
