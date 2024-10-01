@@ -53,4 +53,4 @@ export type AnyChain<From, To = From> = Chain<From, To, any>
 
 export type ConnectedChain<From, To> = (next: NextFn<To>, parameter: From) => CleanupExec
 
-
+export default {}
