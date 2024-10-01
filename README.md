@@ -14,7 +14,6 @@ The essential concepts of **Signal-Chain** are:
 - **Chain**: A series of operations. Can be connected to update a *primitive*.
 - **Operator**: Defines an operation in a *chain*. A *chain* itself can be an *operator* of another *chain*.
 - **Signal**: A value/state, that runs from top to bottom through a *connected chain*, being manipulated according to the *operators* of the *chain*.
-- **Listener**: A subscription to a reactive value. Can be an *operator* in a *chain*.
 
 ## Example
 
@@ -29,10 +28,11 @@ document.getElementById('my-input')?.addEventListener('input', (event) => {
    input.value = (event.target as HTMLInputElement).value
 })
 
-// fetchData is a Chain that can fetch data from the server
-// Until it is connected, it will not do anything (like a function definition)
+// fetchData is a Chain that can listen to the input field
+// and fetch data from the server when it changes.
+// Until it is connected, it will not do anything, similar to a function definition.
 // Once it is connected and a signal arrives,
-// the signal will traverse the chain from top to bottom, potentially producing output
+// the signal will traverse the chain from top to bottom producing a result
 const fetchData = $.chain(
    input.listen, // listen to changes
    $.if(input => input.length > 2,
@@ -54,17 +54,17 @@ const fetchData = $.chain(
 // serverData is a reactive primitive.
 // $.primitive.connect takes a chain and connects it.
 // It will immediately send a signal through the chain
-// and write all output to the serverData primitive until disconnected.
+// and write the result to the serverData primitive until disconnected.
 const serverData = $.primitive.connect(fetchData)
 
 // let's presume we have a filter string that can be changed by the user
 const filter = $.primitive.create('some filter string')
 
-// We combine the server data and the filter to produce the filtered results
-// With $.primitive.connect we can define the chain inline.
-// It will be connected immediately
+// We can combine the server data and the filter to produce filtered results
+// With $.primitive.connect we can define the chain inline,
+// It will be connected immediately.
 const filteredResults = $.primitive.connect(
-   $.combine(serverData.listen, filter.listen),
+   $.combine(serverData.listen, filter.listen), // fires on any change
    $.select(([data, filter]) => data.filter(elem => elem.includes(filter)))
 )
 
@@ -73,8 +73,8 @@ const timer = $.primitive.create(0)
 const intervalId = setInterval(() => { timer.value += 1 }, 1000) // update every second
 
 // If we do not care about the resulting values
-// We can use $.connect to connect a chain
-// Here we can also define the chain inline
+// we can use $.connect to connect a chain.
+// Here we can also define the chain inline.
 const disconnect = $.connect(
    timer.listen,
    $.await.parallel( // executes and resolves all promises as they come in
@@ -96,7 +96,7 @@ disconnect() // stop sending tracking data
 clearInterval(intervalId) // stop timer
 ```
 
-When a *Chain* is *connected*, a *Signal* of runs from top to bottom through the *Chain*. Each *Operator* can change, delay, or stop the *Signal*. Some *Operators*, like the *listener* can trigger a new *Signal*. *Chains* can have output data, that can be stored in a *Primitive*. *Chains* can also have input data, like a function or a procedure that needs some arguments to run. *Chains* can also be chained together into new *Chains*, making them flexible and reusable. *Primitives*, *Operators* and *Chains* are fully typed and types are automatically inferred, making it impossible to chain incompatible data.
+When a *Chain* is *connected*, a *Signal* of runs from top to bottom through the *Chain*. Each *Operator* can change, delay, or stop the *Signal*. Some *Operators* can trigger a new *Signal*. *Chains* can have output data, that can be stored in a *Primitive*. *Chains* can also have input data, like a function or a procedure that needs some arguments to run. *Chains* can also be chained together into new *Chains*, making them flexible and reusable. *Primitives*, *Operators* and *Chains* are fully typed and types are automatically inferred, making it impossible to chain incompatible data.
 
 Error handling in Javascript is difficult: All kinds of things can throw. When a *Chain* throws, it breaks. **Signal-Chain** provides *Error Handling Operators* to catch and handle errors effectively, following the principles of *Errors as Value*.
 
@@ -124,7 +124,7 @@ console.log(counter.value) // logs: 1
 
 > While primitives theoretically work with Objects and Arrays, it is strongly discouraged to use those, because change is detected on assignment. There is no deep proxy that will listen for changes of the Object properties or Array elements. If you want to work with Objects and Arrays, use instead `$.listen.key` or `$.each`.
 
-We can also listen to changes of the counter.
+We can listen to changes of the counter.
 ```typescript
 const disconnect = counter.listen(newValue => {
    console.log('new value:', newValue) // logs: new value: 1
@@ -150,7 +150,7 @@ const disconnect = counter.listen(value => {
 ```
 Whenever the value changes, the paragraph will be updated. When the listener is disconnected, the paragraph will be removed from the body.
 
-This example has a serious downside though: We remove and append the element each time a value is updated, which feels somewhat wasteful. We can improve on this by using the parameter passed to the cleanup: A `boolean` that is true on disconnect.
+This example has a serious downside though: We remove and append the element each time a value is updated, which is inefficient. We can improve on this by using the parameter passed to the cleanup: A `boolean` that is true only on disconnect.
 
 ```typescript
 const el = document.createNode('p')
@@ -184,13 +184,15 @@ const logSquare = $.chain(
 )
 ```
 
-The *Chain* type is broken down into multiple subtypes:
+The *Chain* type is broken down into four subtypes:
 - `SyncChain`: This *Chain* executes **synchronously** and will **complete**
 - `AsyncChain`: This *Chain* executes **asynchronously** and will **complete**
 - `WeakChain`: This *Chain* executes **synchronously**, but may **not complete**
 - `AsyncWeakChain`: This *Chain* executes **asynchronously** and may **not complete**
 
-These types give static hints about the behaviour of the *Chain* and when used with `$.evaluate` or `$.function` will produce slightly different results.
+These types give static hints about the behaviour of the *Chain* and effect the result types of `$.evaluate` and `$.function`.
+
+> This is similar to **function coloring**: as soon as an Async Operator is inserted into the chain, the whole Chain becomes an *AsyncChain*, and with that immediately all other chains that use the now Async Chain. The same happens if you introduce an Operator that can stop the chain: It becomes a *WeakChain* and with it all its dependants. The good news is, that this happens **statically** in Typescript, so you know what to expect depending on the type. Of course, this is being **inferred** from the types of Operators uesd in the Chain and requires no manual adjustment.
 
 Once we connect the chain, it will start listening to the counter. Note that it executes immediately and synchronously on connection.
 ```typescript
@@ -215,11 +217,11 @@ console.log(squaredValue.value) // logs: 100
 
 The *Primitive* `squaredValue` behaves like a computed value. Its value will update whenever the *Signal* of its *Chain* reaches the end. Because it is a regular *Primitive*, it can be used in other *Chains*.
 
-> The updates follow a push model: A connected chain will run, no matter how many subscribers its computed primitive has.
+> Updates follow a **push model**: A connected chain will run, no matter how many subscribers its computed primitive has.
 
 ### Reusability
 
-In the above example, we squared a counter value. Sometimes, we want to specify behaviour, but want to be able to apply it to different sources later. We can do that, by creating a chain that requires an input value.
+In the above example, we squared a counter value. Sometimes, we want to specify behaviour, but want to be able to apply it to different sources later. We can do that, by creating a chain that requires an **input value**.
 ```typescript
 const appleFormat = $.chain(
    $.select<number>(x => Math.round(x)),
@@ -250,7 +252,7 @@ The `$.if` operator expects a condition function as first parameter, the second 
 
 If none of the statements hold, it will call `$.stop`, which stops the *Signal*, and produces the type `never`.
 
-This results in `appleFormat` being of type `WeakChain<number, string>`, a *Chain* that requires a `number` input and will produce a `string` output or not finish.
+This results in `appleFormat` being of type `WeakChain<number, string>`, a *Chain* that requires a `number` input and will produce a `string` output or not complete.
 
 We can now use this chain to format a number.
 ```typescript
@@ -272,7 +274,7 @@ When `counter.value = -1`, the *Chain* did not complete, and therefore not updat
 
 ### Asynchronous Operations
 
-Admittedly, this type of formatting could have been done more easy with a traditional function. Let us take this approach and combine it with some asynchronous logic. This is a main strength of **Signal-Chain**: It allows to define asynchronous reactive behaviour in a declaritive way.
+Admittedly, this type of formatting could have been done easily with a traditional function. Let us take this approach and combine it with some asynchronous logic. This is a main strength of **Signal-Chain**: It allows to define asynchronous reactive behaviour in a declaritive way.
 
 Here, we will implement an auto suggest feature, that fetches some data from an API and logs the result.
 ```typescript
@@ -323,24 +325,24 @@ const suggestions = $.primitive.connect(
 In this example we first store the user input in a reactive primitive. We use that primitive as a starting point to define the chain to fetch the suggestions.
 
 Let's have a look at the debounce part:
-- The `$.await.latest` operator will pass on the latest resolved value. If a value is incoming while the previous promise is still pending, the previous promise will be cancelled and the resolve of the new one is awaited instead.
-- Together with the wait function, this will effectively create a debounce, only passing on the input when there is no new value for 150 ms.
+- The `$.await.latest` operator will execute the *inner chain* whenever a new value arrives. It will pass on the latest resolved value. If a value is incoming while the previous promise is still pending, the previous promise will be discarded and the resolve of the new one is awaited instead.
+- Together with the wait function, this will effectively create a debounce, only passing on the input when there is no new input for 150 ms.
 
-The `$.await.latest` operator will resolve the promise or pass on an `Error` if the promise is rejected. Its output type is `TypeOfPromiseResolve | Error`. In this case we know, that `wait` cannot reject, so we can safely discard the error.
+The `$.await.latest` operator will (like all promise resolvers) resolve the promise or pass on an `Error` if the promise is rejected. Its output type is `TypeOfPromiseResolve | Error`. In this case we know, that `wait` cannot reject, so we can safely discard the error.
 
 This design follows the principle of **errors as values**. It reminds the developer that something can go wrong here and need be handled. If we remove the error handling code from the *Chain*, the resulting suggestion pimitive would have an inferred type of `string[] | Error`. Because the promise is being used inside `$.await.latest`, the rejection will be caught and passed on.
 
 The `$.if` operator has a third parameter, which is the negative condition *Chain*: If the condition is not met, a fallback value will emitted. If there is no negative branch and the condition is not met, the input is being passed through unchanged.
 
 The `$.await.latest` is also exactly what we want in fetching data. If a new input is given while the previous request is still pending, the previous request will be discarded. This is similar to the RxJS behviour of `switchMap`. For other scenarios there are 4 more await operators with different strategies:
-- `$.await.parallel`: Passes on each resolved value as soon as it resolves.
-- `$.await.order`: Passes on resolved values in the order they were requested.
-- `$.await.block`: Will only enter the inner block when no promise is pending. Incoming values will be discarded.
-- `$.await.queue`: Will only enter the inner block when no promise is pending. Incoming values will be queued and processed by the inner block once the pending promise is resolved.
+- `$.await.parallel`: Executes eager and passes on each resolved value as soon as it resolves.
+- `$.await.order`: Executes eager and passes on resolved values in the order they were requested.
+- `$.await.block`: Will not execute when a promise is already running. Incoming values will be ignored and discarded.
+- `$.await.queue`: Will execute one promise at a time. Incoming values will be queued and processed by the inner block once the currently pending promise is resolved.
 
 ### Reactivity with Plain Objects
 
-Sometimes you may work with existing logic, or maybe you prefer to store our state in plain objects. **Signal-Chain** can listen to plain objects and arrays using proxies.
+If you work with existing logic, or your state becomes big enough, you may prefer to store state in plain objects. **Signal-Chain** can listen to plain objects and arrays using proxies.
 
 Let's assumet we have a state object like this:
 ```typescript
@@ -355,21 +357,24 @@ const state = {
 }
 ```
 
-And let's further assume there is pre-existing logic spread out over the source code, that sets the filter and the elements. We can still listen to changes of the filter and the elements:
+We can listen to changes of the filter and the elements like this:
 ```typescript
 const filter = $.primitive.connect(
    $.emit(state), // emit the state object
    $.listen.key('filter'), // listen to changes in the filter key
 )
 const elements = $.primitive.connect(
-   $.emit(state), // emit the state object
-   $.listen.key('elements'), // listen to changes in the elements key
+   $.emit(state),
+   $.listen.key('elements'),
 )
 ```
 - The `$.emit` operator has no input and emits the passed argument.
-- The `$.listen.key` operator will listen to changes in the given key of the incoming object. Whenever the value changes, it will fire. If the value of the key is an array type, the listener will be attached to the array itself via proxy, so that any changes to the array will also be detected.
+- The `$.listen.key` operator will listen to changes in the given key of the incoming object. Whenever an observed value changes, it will fire.
 
-In order for the `$.listen.key` operator to work on the object, it inserts a proxy in place of the object key resp. array. The proxy is designed to not interfere with the object itself, but it will make the object appear slightly different, for example on `console.log` operations.
+The `$.listen.key` listener is **semi-shallow**, that means: If the value of the key is a **Primitive value** (`string`, `number` etc...), changes will be detected. If it is an **Array of Primitives**, changes will be detected. If it is an **Object** or an **Array of Objects**, only reassignments will be detected, none of their property changes. To achieve that, use another `$.listen.key` and/or combine it with `$.each`, as done in the following examples.
+
+> The `$.listen.key` operator inserts a proxy in place of the object key resp. array. This allows normal read and write operations to the object keys and values.
+> There is currently no support for reactive Object iterators, like Object.keys, Object.entries etc.
 
 
 This is how we could implement a reactive filter:
@@ -381,6 +386,7 @@ const filteredElements = $.primitive.connect(
    ),
    $.select(
       ([elements, filter]) => elements.filter(
+         // Don't do this, this will NOT be fully reactive:
          element => element.name.includes(filter)
       )
    )
