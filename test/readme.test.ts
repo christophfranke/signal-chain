@@ -32,13 +32,13 @@ describe('readme', () => {
                     input => fetchMock(`/api/search?q=${input}`).then(res => res.json() as Promise<string[]>)
                  ),
               ),
-              $.emit([]) // fallback to empty array if input is too short
+              $.emit([] as string[]) // fallback to empty array if input is too short
            ),
            $.error.handle(
               $.error.log('API request failed:'),
               $.effect(error => window.alert(`Error: ${error.toString()}`)),
               $.stop() // stop execution of chain here
-           )
+           ),
         )
 
         // serverData is a reactive primitive.
@@ -46,6 +46,9 @@ describe('readme', () => {
         // It will immediately send a signal through the chain
         // and write the result to the serverData primitive until disconnected.
         const serverData = $.primitive.connect(fetchData)
+        const serverDataWithBackup = $.primitive.connect(
+            $.merge(fetchData, $.emit([] as string[]))
+        )
 
         // let's presume we have a filter string that can be changed by the user
         const filter = $.primitive.create('some filter string')
@@ -54,7 +57,7 @@ describe('readme', () => {
         // With $.primitive.connect we can define the chain inline,
         // It will be connected immediately.
         const filteredResults = $.primitive.connect(
-           $.combine(serverData.listen, filter.listen), // fires on any change
+           $.combine(serverDataWithBackup.listen, filter.listen), // fires on any change
            $.select(([data, filter]) => data.filter(elem => elem.includes(filter)))
         )
 
