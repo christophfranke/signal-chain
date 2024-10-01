@@ -15,9 +15,9 @@ The essential concepts of **Signal-Chain** are:
 - **Operator**: Defines an operation in a *chain*. A *chain* itself can be an *operator* of another *chain*.
 - **Signal**: A value/state, that runs from top to bottom through a *connected chain*, being manipulated according to the *operators* of the *chain*.
 
-## Example
-
 Taking these concepts together allows us to express complex behaviours in a declarative way:
+
+## Example
 
 ```typescript
 // define a reactive primitive
@@ -36,9 +36,8 @@ document.getElementById('my-input')?.addEventListener('input', (event) => {
 const fetchData = $.chain(
    input.listen, // when the chain is connected, this will fire on every input change
    $.if(input => input.length > 2,
-      $.await.latest( // will discard all results but the latest
-         // make http request to search endpoint whenever user input is changed
-         $.select(
+      $.await.latest( // will discard all fetch results but the latest
+         $.select( // make http request
             input => fetch(`/api/search?q=${input}`).then(res => res.json() as Promise<string[]>)
          ),
       ),
@@ -64,8 +63,8 @@ const filter = $.primitive.create('some filter string')
 // With $.primitive.connect we can define the chain inline,
 // It will be connected immediately.
 const filteredResults = $.primitive.connect(
-   $.combine(serverData.listen, filter.listen), // fires on any change
-   $.select(([data, filter]) => data.filter(elem => elem.includes(filter)))
+   $.combine(serverData.listen, filter.listen),
+   $.select(([data, filter]) => data?.filter(elem => elem.includes(filter)))
 )
 
 // let's define a reactive timer
