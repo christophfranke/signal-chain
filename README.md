@@ -49,11 +49,14 @@ const fetchData = $.chain(
 )
 
 // serverData is a reactive primitive.
-// $.primitive.connect takes a chain and connects it,
-// and will write all output to the serverData primitive.
+// $.primitive.connect takes a chain and connects it.
+// It will immediately send a signal through the chain
+// and write all output to the serverData primitive until disconnected.
 const serverData = $.primitive.connect(fetchData)
 
-// we can also define a chain inline and immediately connect it
+// Here we define a chain inline and immediately connect it
+// Because this time we don't care for the output,
+// we do not create a primitive and use $.connect instead
 const disconnect = $.connect(
    serverData.listen, // listen to incoming data
    $.effect(searchResults => {
@@ -62,7 +65,8 @@ const disconnect = $.connect(
    })
 )
 
-disconnect() // will stop printing new search results
+serverData.disconnect() // stop fetching
+disconnect() // stop logging
 ```
 
 When a *Chain* is *connected*, a *Signal* of runs from top to bottom through the *Chain*. Each *Operator* can change, delay, or stop the *Signal*. Some *Operators*, like the *listener* can trigger a new *Signal*. *Chains* can have output data, that can be stored in a *Primitive*. *Chains* can also have input data, like a function or a procedure that needs some arguments to run. *Chains* can also be chained together into new *Chains*, making them flexible and reusable. *Primitives*, *Operators* and *Chains* are fully typed and types are automatically inferred, making it impossible to chain incompatible data.
