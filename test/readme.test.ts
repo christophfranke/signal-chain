@@ -2,6 +2,90 @@ import $ from '../src/signal-ts'
 import { describe, it, expect } from 'vitest'
 
 describe('readme', () => {
+    it('should get the poser exapmle right', async () => {
+        const fetchMock = (..._: any[]) => new Promise<any>(res => res({
+            status: 200,
+            json() {
+                return Promise<['hi', 'welt']>
+            }
+        }))
+
+        // define a reactive primitive
+        const input = $.primitive.create('')
+
+        // update the input value when user type
+        // document.getElementById('my-input')?.addEventListener('input', (event) => {
+        //    input.value = (event.target as HTMLInputElement).value
+        // })
+
+        // fetchData is a Chain that can listen to the input field
+        // and fetch data from the server when it changes.
+        // Until it is connected, it will not do anything, similar to a function definition.
+        // Once it is connected and a signal arrives,
+        // the signal will traverse the chain from top to bottom producing a result
+        const fetchData = $.chain(
+           input.listen, // listen to changes
+           $.if(input => input.length > 2,
+              $.await.latest( // will discard all results but the latest
+                 // make http request to search endpoint whenever user input is changed
+                 $.select(
+                    input => fetchMock(`/api/search?q=${input}`).then(res => res.json() as Promise<string[]>)
+                 ),
+              ),
+              $.emit([]) // fallback to empty array if input is too short
+           ),
+           $.error.handle(
+              $.error.log('API request failed:'),
+              $.effect(error => window.alert(`Error: ${error.toString()}`)),
+              $.stop() // stop execution of chain here
+           )
+        )
+
+        // serverData is a reactive primitive.
+        // $.primitive.connect takes a chain and connects it.
+        // It will immediately send a signal through the chain
+        // and write the result to the serverData primitive until disconnected.
+        const serverData = $.primitive.connect(fetchData)
+
+        // let's presume we have a filter string that can be changed by the user
+        const filter = $.primitive.create('some filter string')
+
+        // We can combine the server data and the filter to produce filtered results
+        // With $.primitive.connect we can define the chain inline,
+        // It will be connected immediately.
+        const filteredResults = $.primitive.connect(
+           $.combine(serverData.listen, filter.listen), // fires on any change
+           $.select(([data, filter]) => data.filter(elem => elem.includes(filter)))
+        )
+
+        // let's define a reactive timer
+        const timer = $.primitive.create(0)
+        const intervalId = setInterval(() => { timer.value += 1 }, 1000) // update every second
+
+        // If we do not care about the resulting values
+        // we can use $.connect to connect a chain.
+        // Here we can also define the chain inline.
+        const disconnect = $.connect(
+           timer.listen,
+           $.await.parallel( // executes and resolves all promises as they come in
+              // post tracking data to server
+              $.select(() => fetchMock('/api/tracking/impressions', {
+                 method: 'POST',
+                 body: JSON.stringify(filteredResults.value)
+              })),
+           ),
+           $.error.discard(), // we want only success here
+           $.if(res => res?.status == 200,
+              $.effect(() => console.log('Impression request success'))
+           )
+        )
+
+        serverData.disconnect() // stop fetching
+        filteredResults.disconnect() // stop filtering
+        disconnect() // stop sending tracking data
+        clearInterval(intervalId) // stop timer
+    })
+
     it('should get the first example right', () => {
         // creates a reactive primitive, like a ref or a signal
         const counter = $.primitive.create(0)

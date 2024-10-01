@@ -39,14 +39,14 @@ const fetchData = $.chain(
       $.await.latest( // will discard all results but the latest
          // make http request to search endpoint whenever user input is changed
          $.select(
-            input => fetch(`/api/search?q=${input}`).then(res => res.json() as string[])
+            input => fetch(`/api/search?q=${input}`).then(res => res.json() as Promise<string[]>)
          ),
       ),
       $.emit([]) // fallback to empty array if input is too short
    ),
    $.error.handle(
-      $.error.log('API request failed:')
-      $.effect(error => window.alert(`Error: ${error.toString()}`))
+      $.error.log('API request failed:'),
+      $.effect(error => window.alert(`Error: ${error.toString()}`)),
       $.stop() // stop execution of chain here
    )
 )
@@ -81,7 +81,7 @@ const disconnect = $.connect(
       // post tracking data to server
       $.select(() => fetch('/api/tracking/impressions', {
          method: 'POST',
-         data: JSON.stringify(filteredResults.value)
+         body: JSON.stringify(filteredResults.value)
       })),
    ),
    $.error.discard(), // we want only success here
