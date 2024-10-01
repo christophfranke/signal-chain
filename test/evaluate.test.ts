@@ -7,9 +7,9 @@ describe('evaluate', () => {
     )
 
     const asyncChain = $.chain(
-        $.emit(1),
+        $.emit(100),
         $.await.latest(
-            $.select(x => Promise.resolve(x))
+            $.select(x => new Promise<number>(res => setTimeout(() => res(x), 50)))
         ),
         $.type.not.isError()
     )
@@ -29,7 +29,7 @@ describe('evaluate', () => {
     })
 
     it('evaluate the async chain', async () => {
-        expect(await $.evaluate(asyncChain)).toBe(1)
+        expect(await $.evaluate(asyncChain)).toBe(100)
     })
 
     it('should return undefined when incomplete', () => {

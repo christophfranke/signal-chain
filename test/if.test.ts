@@ -25,15 +25,19 @@ describe('if', () => {
             $.type.not.isError(),
 
             // ensure long enough input, if not, fallback to empty array
-            $.if((input: string)  => input.length > 2, [])(
-                $.select(input => `/api/suggest/${input}`),
-                $.await.latest(
-                    $.select(url => fetchmock(url).then(response => response.json()) as Promise<string[]>),
+            $.if(
+                input => input.length > 2,
+                $.chain(
+                    $.select(input => `/api/suggest/${input}`),
+                    $.await.latest(
+                        $.select(url => fetchmock(url).then(response => response.json()) as Promise<string[]>),
+                    ),
+                    $.type.isError(
+                        $.effect(err => console.error('Error fetching suggestions:', err)),
+                        $.select(() => []),
+                    ),
                 ),
-                $.type.isError(
-                    $.effect(err => console.error('Error fetching suggestions:', err)),
-                    $.select(() => []),
-                ),
+                $.emit([])
             ),
 
             $.log('Suggestions:') // Suggestions: ['So', 'many', 'suggestions', ...]
@@ -43,22 +47,26 @@ describe('if', () => {
     })
 
     it('should not fail on the readme example', () => {
-        const format = $.chain(
+        const appleFormat = $.chain(
            $.select<number>(x => Math.round(x)),
-           $.if((x: number) => x > 1)(
-              $.select(x => `We have ${x} apples`)
+           $.if(
+                x => x > 1,
+                $.select(x => `We have ${x} apples`),
+                $.if(
+                    x => x === 1,
+                    $.select(() => `We have an apple`),
+                    $.if(
+                        x => x === 0,
+                        $.select(() => `We have no apples`),
+                        $.chain(
+                            $.effect(x => console.error(`Cannot have ${x} apples. No update to appleFormat.`)),
+                            $.stop()
+                        )
+                    ),
+                ),
            ),
-           $.if(x => x === 1)(
-              $.select(() => `We have an apple`)
-           ),
-           $.if(x => x === 0)(
-              $.select(() => `We have no apples`)
-           ),
-           $.type.isNumber(
-              $.select(() => 'I cannot handle negative apples. Or NaN apples.')
-           )
         )
 
-        expect($.evaluate($.emit(1), format)).toBe('We have an apple')
+        expect($.evaluate($.emit(1), appleFormat)).toBe('We have an apple')
     })
 })

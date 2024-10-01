@@ -16,6 +16,7 @@ import { connect } from './signal/connect'
 import { evaluate, toFunction, toComputed } from './signal/evaluate'
 import { listenToEvent } from './signal/event'
 import { merge } from './signal/merge'
+import { panicOnError, discardError, logError, stopOnError } from './signal/error'
 import { assert as createAssert,
   assertNot as createAssertNot,
   isNothing,
@@ -105,6 +106,15 @@ const debounce = <V>(ms: number) => chain(
   ),
 )
 
+const errorFns = {
+  handle: isError,
+  discard: discardError,
+  stop: stopOnError,
+  panik: panicOnError,
+  log: logError,
+  catch: catchFn,
+}
+
 export default {
   config: setConfig,
 
@@ -115,6 +125,7 @@ export default {
   type,
   maybe,
   unique,
+  error: errorFns,
 
   // adapters
   // solid,

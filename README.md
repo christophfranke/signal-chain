@@ -11,10 +11,63 @@
 The essential concepts of **Signal-Chain** are:
 
 - **Primitive**: Represents a single reactive value.
-- **Chain**: A series of operations. Can be connected to update a primitive.
-- **Element**: A single operation in a chain. Every chain can be an element of another chain.
-- **Listener**: A subscription to a reactive value. Can be an element in a chain.
-- **Operator**: An element in a chain, that modifies the behaviour of a sub chain.
+- **Chain**: A series of operations. Can be connected to update a *primitive*.
+- **Operator**: Defines an operation in a *chain*. A *chain* itself can be an *operator* of another *chain*.
+- **Signal**: A value/state, that runs from top to bottom through a *connected chain*, being manipulated according to the *operators* of the *chain*.
+- **Listener**: A subscription to a reactive value. Can be an *operator* in a *chain*.
+
+## Example
+
+Taking these concepts together allows us to express complex behaviours in a declarative way:
+
+```typescript
+// define a reactive primitive
+const input = $.primitive.create('')
+
+// update the input value when user type
+document.getElementById('my-input')?.addEventListener('input', (event) => {
+   input.value = (event.target as HTMLInputElement).value
+})
+
+// serverData is a reactive primitive.
+// Whenever the signal reaches the end of the chain, its value is updated.
+// The call to connect sends an initial signal immediately.
+// Changes to the input primitive will trigger new signals.
+const serverData = $.primitive.connect(
+   input.listen, // listen to changes
+   $.if(input => input.length > 2,
+      $.await.latest(
+         // make http request to search endpoint whenever user input is changed
+         $.select(input => fetch(`/api/search?q=${input}`).then(res => res.json())),
+      ),
+      $.emit([]) // fallback to empty array if input is too short
+   ),
+   $.error.handle(
+      $.error.log('API request failed:')
+      $.stop() // stop execution of chain here
+   )
+)
+
+// Defines a chain without connecting it.
+// An unconnected chain is like a function declaration:
+// It does nothing by itself.
+const handleDataChain = $.chain(
+   serverData.listen, // listen to incoming data
+   $.effect(searchResults => {
+      // do something with the data
+      console.log('new search results:', searchResults)
+   })
+)
+
+// Once the chain is connected, it will run until disconnect is called
+const disconnect = $.connect(handleDataChain)
+```
+
+When a *Chain* is *connected*, a *Signal* of runs from top to bottom through the *Chain*. Each *Operator* can change, delay, or stop the *Signal*. Some *Operators*, like the *listener* can trigger a new *Signal*. *Chains* can have output data, that can be stored in a *Primitive*. *Chains* can also have input data, like a function or a procedure that needs some arguments to run. *Chains* can also be chained together into new *Chains*, making them flexible and reusable. *Primitives*, *Operators* and *Chains* are fully typed and types are automatically inferred, making it impossible to chain incompatible data.
+
+Error handling in Javascript is difficult: All kinds of things can throw. When a *Chain* throws, it breaks. **Signal-Chain** provides *Error Handling Operators* to catch and handle errors effectively, following the principles of *Errors as Value*.
+
+## Documentation
 
 **Installation**:
 ```sh
@@ -35,6 +88,8 @@ A primitive is a container holding a single reactive value. We can access and up
 counter.value = 1
 console.log(counter.value) // logs: 1
 ```
+
+> While primitives theoretically work with Objects and Arrays, it is strongly discouraged to use those, because change is detected on assignment. There is no deep proxy that will listen for changes of the Object properties or Array elements. If you want to work with Objects and Arrays, use instead `$.listen.key` or `$.each`.
 
 We can also listen to changes of the counter.
 ```typescript
@@ -82,7 +137,7 @@ const disconnect = counter.listen(value => {
 
 Now that we have seen how *Primitives* work, we will use *Chains* to operate on *Primitives*. A *Chain* gives us the ability to define a series of operations that can be combined and reused. As opposed to the `listen` function of a *Primitive*, a *Chain* will not execute before it is connected.
 
-We can use the `listen` function of a *Primitive* as an element in a *Chain* and combine it with a few operators:
+We can use the `listen` function of a *Primitive* as an *Operator* in a *Chain* and combine it with a other *Operators*:
 - `$.select`: Maps the incoming value to a new value.
 - `$.effect`: Executes a side effect. Like in the `listen` function we can return a cleanup.
 
@@ -96,7 +151,7 @@ const logSquare = $.chain(
 )
 ```
 
-The *Chain* is broken down into multiple subtypes:
+The *Chain* type is broken down into multiple subtypes:
 - `SyncChain`: This *Chain* executes **synchronously** and will **complete**
 - `AsyncChain`: This *Chain* executes **asynchronously** and will **complete**
 - `WeakChain`: This *Chain* executes **synchronously**, but may **not complete**
@@ -125,59 +180,66 @@ counter.value = 10
 console.log(squaredValue.value) // logs: 100
 ```
 
+The *Primitive* `squaredValue` behaves like a computed value. Its value will update whenever the *Signal* of its *Chain* reaches the end. Because it is a regular *Primitive*, it can be used in other *Chains*.
+
+> The updates follow a push model: A connected chain will run, no matter how many subscribers its computed primitive has.
+
 ### Reusability
 
 In the above example, we squared a counter value. Sometimes, we want to specify behaviour, but want to be able to apply it to different sources later. We can do that, by creating a chain that requires an input value.
 ```typescript
-const format = $.chain(
+const appleFormat = $.chain(
    $.select<number>(x => Math.round(x)),
-   $.if((x: number) => x > 1)(
-      $.select(x => `We have ${x} apples`)
+   $.if(
+      x => x > 1,
+      $.select(x => `We have ${x} apples`),
+      $.if(
+         x => x === 1,
+         $.select(() => `We have an apple`),
+         $.if(
+            x => x === 0,
+            $.select(() => `We have no apples`),
+            $.chain(
+               $.effect(x => console.error(`Cannot have ${x} apples. Stop updates.`)),
+               $.stop()
+            )
+         ),
+      ),
    ),
-   $.if(x => x === 1)(
-      $.select(() => `We have an apple`)
-   ),
-   $.if(x => x === 0)(
-      $.select(() => `We have no apples`)
-   ),
-   $.type.isNumber(
-      $.effect(x => console.log("I don't like", x, 'apples')),
-      $.stop()
-   )
 )
 ```
 
-Here we have created a chain, that will format a number into a string. There are a few things going on:
+Here we have created a *Chain*, that will format a number into a string. Let us look at the *Operators* and their **Types** specifically:
 
-The first `$.select` has a type parameter `number`, which specifies that we expect a number as input. If we do not specify this, Typescript will infer `unknown` and complain about the `Math.round(x)` operation. This is the recommended approach of defining input types for chains. It is possible to use an empty select operation `$.select<ExpectedType>()`.
+The first `$.select` has a type parameter `number`, which specifies that we expect a number as input. If we do not specify this, Typescript will infer `unknown` and complain about the `Math.round(x)` operation. This is the recommended approach of defining input types for chains. It is possible to use an empty select operation `$.select<ExpectedType>()`. If you pass a second type parameter for `$.select` it will define the output type. The typesystem is setup in a way to require minimum type annotations and infer as much as possible.
 
-The `$.if` operator is a higher order operator. It expects a condition function, and can then define a new chain, the *inner chain*, which will only execute if the condition is true. If the condition is not met, it will pass on the value. The select operator in the *inner chain* rewrites the `number` into a `string`.
+The `$.if` operator expects a condition function as first parameter, the second parameter is a chain if the condition is met, and the third parameter if the condition is not met. We can see that if `x > 1`, it will produce a `string`, otherwise go into the next statement `x === 1`, if met produce a `string`, if `x === 0` it will produce a `string`.
 
-The `$.type.isNumber` is similar to the `$.if` operator, in that it allows you to define a *inner chain*, that only gets executed when the incoming value is a `number`. Every *Chain* is strongly typed, and after the `$.select` operations inside the `$.if` statement, Typescript will infer `number | string`, after the `$.if` operations.
+If none of the statements hold, it will call `$.stop`, which stops the *Signal*, and produces the type `never`.
 
-The `$.effect` writes to the console, without changing the passing value. The `$.stop` operator stops the chain, therefore the output of the *inner chain* is being inferred as `never`. The `$.type` operator then concludes, that the remaining type can only be a `string`.
-
-This results in `format` being of type `Chain<number, string>`, a chain that requires a `number` input producing a `string` output.
+This results in `appleFormat` being of type `WeakChain<number, string>`, a *Chain* that requires a `number` input and will produce a `string` output or not finish.
 
 We can now use this chain to format a number.
 ```typescript
 const counter = $.primitive.create(0)
 const formatted = $.primitive.connect(
    counter.listen,
-   format,
+   appleFormat,
    $.effect(value => console.log(value)) // logs: We have no apples
 )
 
 counter.value = 10 // logs: We have 10 apples
-console.log(formatted.value) // logs: We have 10 apples
+console.log('formatted ->', formatted.value) // logs: formatted -> We have 10 apples
 
-counter.value = -1 // logs: I don't like -1 apples
-console.log(formatted.value) // logs: We have 10 apples
+counter.value = -1 // logs error: I don't like -1 apples
+console.log('formatted ->', formatted.value) // logs: formatted -> We have 10 apples
 ```
+
+When `counter.value = -1`, the *Chain* did not complete, and therefore not update the formatted value.
 
 ### Asynchronous Operations
 
-Admittedly, this type of formatting could have been done with a traditional function. Let us take this approach and combine it with some asynchronous logic. This is a main strength of **Signal-Chain**: It allows to define asynchronous reactive behaviour in a declaritive way.
+Admittedly, this type of formatting could have been done more easy with a traditional function. Let us take this approach and combine it with some asynchronous logic. This is a main strength of **Signal-Chain**: It allows to define asynchronous reactive behaviour in a declaritive way.
 
 Here, we will implement an auto suggest feature, that fetches some data from an API and logs the result.
 ```typescript
@@ -204,19 +266,22 @@ const suggestions = $.primitive.connect(
    $.await.latest(
       $.select(input => wait(input, 150)),
    ),
-   $.type.not.isError(), // type narrowing
+   $.error.discard(), // promises can be rejected, but our wait function never fails
 
    // fetch if input is long enough, otherwise fall back to empty array
-   $.if((input: string) => input.length > 2, [])(
-      $.select(input => `/api/suggest/${input}`),
-      $.await.latest(
-         $.select(url => fetch(url)),
-         $.select(async response => (await response).json() as Promise<string[]>),
+   $.if(input => input?.length > 2,
+      $.chain(
+         $.select(input => `/api/suggest/${input}`),
+         $.await.latest(
+            $.select(url => fetch(url)),
+            $.select(async response => (await response).json() as Promise<string[]>),
+         ),
+         $.error.handle(
+            $.effect(err => console.error('Error fetching suggestions:', err)),
+            $.select(() => []) // fallback to empty array
+         ),
       ),
-      $.type.isError(
-         $.effect(err => console.error('Error fetching suggestions:', err)),
-         $.select(() => []) // fallback to empty array
-      ),
+      $.emit([])
    ),
 
    $.log('Suggestions:') // Suggestions: ['So', 'many', 'suggestions', ...]
@@ -228,11 +293,11 @@ Let's have a look at the debounce part:
 - The `$.await.latest` operator will pass on the latest resolved value. If a value is incoming while the previous promise is still pending, the previous promise will be cancelled and the resolve of the new one is awaited instead.
 - Together with the wait function, this will effectively create a debounce, only passing on the input when there is no new value for 150 ms.
 
-The `$.await.latest` operator will resolve the promise or pass on an `Error` if rejected. Its output type is `TypeOfPromiseResolve | Error`. In this case we know, that `wait` cannot reject, so we can safely assert that there is no error. The type operator then removes the `Error` type from the chain.
+The `$.await.latest` operator will resolve the promise or pass on an `Error` if the promise is rejected. Its output type is `TypeOfPromiseResolve | Error`. In this case we know, that `wait` cannot reject, so we can safely discard the error.
 
-*Why* is it designed like this? It follows the principle of **errors as values**. This reminds the developer that at this place something can go wrong and we need to handle it somehow. If we were not to handle the error at all, the suggestion pimitive would have an inferred type of `string[] | Error`.
+This design follows the principle of **errors as values**. It reminds the developer that something can go wrong here and need be handled. If we remove the error handling code from the *Chain*, the resulting suggestion pimitive would have an inferred type of `string[] | Error`. Because the promise is being used inside `$.await.latest`, the rejection will be caught and passed on.
 
-The `$.if` operator has a second parameter, which is the fallback value. If the condition is not met, the fallback value will be used instead. If no fallback is given and the condition is not met, the input is being passed through unchanged.
+The `$.if` operator has a third parameter, which is the negative condition *Chain*: If the condition is not met, a fallback value will emitted. If there is no negative branch and the condition is not met, the input is being passed through unchanged.
 
 The `$.await.latest` is also exactly what we want in fetching data. If a new input is given while the previous request is still pending, the previous request will be discarded. This is similar to the RxJS behviour of `switchMap`. For other scenarios there are 4 more await operators with different strategies:
 - `$.await.parallel`: Passes on each resolved value as soon as it resolves.
@@ -392,6 +457,12 @@ Here is a list of all operators available in **Signal-Chain**:
 - `$.await.block`: Will only enter the inner block when no promise is pending. Incoming values will be discarded.
 - `$.await.queue`: Will only enter the inner block when no promise is pending. Incoming values will be queued and processed by the inner block once the pending promise is resolved.
 
+**Error Operators**
+- `$.error.log`: Logs a passing Error value.
+- `$.error.handle`: Enters the *inner Chain* when passing an Error value.
+- `$.error.discard`: Turns an Error value into and undefined.
+- `$.error.log.panik`: Throws incoming Error value and breaks the chain.
+
 **Array Operators**
 - `$.collect`: Collects all incoming values.
 - `$.buffer`: Buffers incoming values.
@@ -408,7 +479,7 @@ Here is a list of all operators available in **Signal-Chain**:
 - `$.passIf`: Passes on the value if the condition is met.
 - `$.stopIf`: Stops the chain if the condition is met.
 - `$.if`: Conditional execution of a chain.
-- `$.ifNot`: Negation of `$.if` without fallback.
+- `$.ifNot`: Negation of `$.if`.
 - `$.debounce`: Debounces the incoming values. Incoming Errors will not be debounced.
 
 **Efficiency Operators**

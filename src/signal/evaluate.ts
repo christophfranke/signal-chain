@@ -28,7 +28,7 @@ export const evaluate: EvaluateCall = (listen1: Chain<any, any>, ...additionalLi
     let unsubscribe: CleanupExec
     const status = { is: 'sync' } as ChainStatus
 
-    let result = undefined
+    let result: any = undefined
     const promise = new Promise(resolve => {
         unsubscribe = chained(value => {
             result = value
@@ -45,6 +45,7 @@ export const evaluate: EvaluateCall = (listen1: Chain<any, any>, ...additionalLi
     if (status.is === 'async') {
         promise.then(() => {
             execute(unsubscribe)
+            // return result is not necessary, is being resolved to value already
         })
 
         return promise

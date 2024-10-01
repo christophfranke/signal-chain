@@ -97,22 +97,21 @@ describe('readme', () => {
             $.emit(user), // emit the user object
             $.listen.key('meta'), // listen to changes in the meta object
             $.listen.key('loggedIn'), // when the meta object changes, this listener gets reattached
-            $.if(loggedIn => !!loggedIn)(
-                $.emit(user),
-                $.listen.key('name'), // name changes when user account is switched without logout
-                // $.log('1'),
-                $.await.latest(
-                    $.select(name => `/api/private/${name.toLowerCase()}`),
-                    $.select(url => mockfetch(url).then(response => response.json()) as Promise<PrivateData>),
+            $.if(
+                loggedIn => !!loggedIn,
+                $.chain(
+                    $.emit(user),
+                    $.listen.key('name'), // name changes when user account is switched without logout
+                    // $.log('1'),
+                    $.await.latest(
+                        $.select(name => `/api/private/${name.toLowerCase()}`),
+                        $.select(url => mockfetch(url).then(response => response.json()) as Promise<PrivateData>),
+                    ),
+                    // $.log('2'),
+                    $.type.isError($.emit(undefined)), // emit undefined on error
                 ),
-                // $.log('2'),
-                $.type.isError($.emit(undefined)), // emit undefined on error
-            ),
-            $.ifNot(loggedIn => !!loggedIn)(
-                // do not leak any data if not logged in
                 $.emit(undefined)
             ),
-            $.type.isBoolean($.select(() => undefined)),
             // $.log('update private data'),
         )
 
