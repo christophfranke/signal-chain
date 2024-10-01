@@ -29,11 +29,11 @@ document.getElementById('my-input')?.addEventListener('input', (event) => {
    input.value = (event.target as HTMLInputElement).value
 })
 
-// serverData is a reactive primitive.
-// Whenever the signal reaches the end of the chain, its value is updated.
-// The call to connect sends an initial signal immediately.
-// Changes to the input primitive will trigger new signals.
-const serverData = $.primitive.connect(
+// fetchData is a Chain that can fetch data from the server
+// Until it is connected, it will not do anything (like a function definition)
+// When it is connected and a signal arrives,
+// the signal will traverse the chain from top to bottom, producing an output
+const fetchData = $.chain(
    input.listen, // listen to changes
    $.if(input => input.length > 2,
       $.await.latest(
@@ -48,10 +48,13 @@ const serverData = $.primitive.connect(
    )
 )
 
-// Defines a chain without connecting it.
-// An unconnected chain is like a function declaration:
-// It does nothing by itself.
-const handleDataChain = $.chain(
+// serverData is a reactive primitive.
+// $.primitive.connect takes a chain and connects it,
+// and will write all output to the serverData primitive.
+const serverData = $.primitive.connect(fetchData)
+
+// we can also define a chain inline and immediately connect it
+const disconnect = $.connect(
    serverData.listen, // listen to incoming data
    $.effect(searchResults => {
       // do something with the data
@@ -59,8 +62,7 @@ const handleDataChain = $.chain(
    })
 )
 
-// Once the chain is connected, it will run until disconnect is called
-const disconnect = $.connect(handleDataChain)
+disconnect() // will stop printing new search results
 ```
 
 When a *Chain* is *connected*, a *Signal* of runs from top to bottom through the *Chain*. Each *Operator* can change, delay, or stop the *Signal*. Some *Operators*, like the *listener* can trigger a new *Signal*. *Chains* can have output data, that can be stored in a *Primitive*. *Chains* can also have input data, like a function or a procedure that needs some arguments to run. *Chains* can also be chained together into new *Chains*, making them flexible and reusable. *Primitives*, *Operators* and *Chains* are fully typed and types are automatically inferred, making it impossible to chain incompatible data.
