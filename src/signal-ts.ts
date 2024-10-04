@@ -16,6 +16,7 @@ import { connect } from './signal/connect'
 import { evaluate, toFunction, toComputed } from './signal/evaluate'
 import { listenToEvent } from './signal/event'
 import { merge } from './signal/merge'
+import { createCache, useCache } from './signal/cache'
 import { panicOnError, discardError, logError, stopOnError } from './signal/error'
 import { assert as createAssert,
   assertNot as createAssertNot,
@@ -115,6 +116,11 @@ const errorFns = {
   catch: catchFn,
 }
 
+const cache = {
+  create: createCache,
+  use: useCache,
+}
+
 export default {
   config: setConfig,
 
@@ -126,6 +132,7 @@ export default {
   maybe,
   unique,
   error: errorFns,
+  cache,
 
   // adapters
   // solid,
@@ -162,7 +169,6 @@ export default {
   ifNot,
   // missing:
   // while
-  // cache
 
   // candy
   log,
