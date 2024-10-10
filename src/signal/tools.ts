@@ -1,4 +1,4 @@
-import type { NextFn, SyncChain, WeakChain, Chain, Function1 } from './types'
+import type { NextFn, SyncChain, WeakChain, Function1 } from './types'
 
 
 /**
@@ -73,11 +73,15 @@ export function through<V>(): SyncChain<V> {
  * @param mapping A function to map the input to the output
  */
 export function select<V>(): SyncChain<V>
-export function select<From, To = From>(mapping: Function1<From, To>): Chain<From, To>
-export function select<From, To>(mapping?: Function1<From, To>): Chain<From, To> {
+export function select<From, To = From>(mapping: Function1<From, To>): SyncChain<From, To>
+export function select<From, To>(mapping?: Function1<From, To>): SyncChain<From, To> {
   if (mapping) {
     return (fn: NextFn<To>, parameter: From) => fn(mapping(parameter))
   }
 
   return through() as any
+}
+
+export function thenFn<From, To>(mapping: Function1<From, To>): SyncChain<Promise<From>, Promise<To>> {
+  return select<Promise<From>, Promise<To>>(n => n.then(mapping))
 }

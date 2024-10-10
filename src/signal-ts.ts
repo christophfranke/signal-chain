@@ -1,6 +1,6 @@
 export * from './signal/types'
 
-import { emit, select, stopIf, stop, passIf, count } from './signal/tools'
+import { emit, select, thenFn, stopIf, stop, passIf, count } from './signal/tools'
 import { passUnique, uniqueValue, selectUnique } from './signal/unique'
 import { ifFn, ifNot } from './signal/if'
 import { chain, sidechain } from './signal/chain'
@@ -136,6 +136,7 @@ export default {
   // essentials
   emit,
   select,
+  then: thenFn,
   effect,
   collect,
   count,
