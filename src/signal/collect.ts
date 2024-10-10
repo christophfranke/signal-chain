@@ -23,7 +23,6 @@ export const collect: CollectCall = <V1, V2>(keep?: Function2<V2, V1, V2>, initi
       context.isInitialized = true
     }
 
-
     if (keep) {
       context.collection = keep(context.collection, parameter)
     } else {
