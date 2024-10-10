@@ -31,29 +31,31 @@ export type CacheConfig<From, To> = {
 export type CacheObject<From = string, To = unknown> = {
     config: CacheConfig<From, To>
     data: Record<string, To>
-    use: UseFn<From, To>
-    // hit: HitFn<From, To>
+    $: {
+        use: UseFn<From, To>
+        // hit: HitFn<From, To>
+    }
 }
 
 export interface CreateCacheFn {
     <From = unknown, To = unknown>(config: Partial<CacheConfig<From, To>> & { key: Function1<From, string> }, data?: Record<string, To>): CacheObject<From, To>
     <To>(config?: Partial<CacheConfig<string, To>>, data?: Record<string, To>): CacheObject<string, To>
-    // <From extends string, To>(config?: Partial<CacheConfig<From, To>>, data?: Record<string, To>): CacheObject<string, To>
 }
 
 export const createCache: CreateCacheFn = <From, To>(config?: Partial<CacheConfig<From, To>>, data?: Record<string, To>): CacheObject<From, To> => {
     const resultConfig = config ?? {}
 
     // TODO: static constraint that From = string when no key function given
-    if ('key' !in resultConfig) {
+    if (!('key' in resultConfig)) {
         resultConfig.key = (k: From) => k as string
     }
 
-    if ('isValid' !in resultConfig) {
+    // TODO: when isValid is in config, then we have a weak chain
+    if (!('isValid' !in resultConfig)) {
         resultConfig.isValid = () => true
     }
 
-    if ('sanitize' !in resultConfig) {
+    if (!('sanitize' !in resultConfig)) {
         resultConfig.sanitize = (k: To) => k
     }
 
@@ -61,6 +63,7 @@ export const createCache: CreateCacheFn = <From, To>(config?: Partial<CacheConfi
         config: resultConfig as CacheConfig<From, To>,
         data: data ?? {},
     }
+
 
     // @ts-ignore
     const useCache: UseFn<From, To> = (listen: Chain<From, To>): Chain<From, To> => {
@@ -71,8 +74,14 @@ export const createCache: CreateCacheFn = <From, To>(config?: Partial<CacheConfi
             }
 
             return listen((value: To) => {
-                cache.data[key] = value
-                return next(value)
+                if (!cache.config.isValid(value)) {
+                    // TODO: mark the chain as weak if the isValid config option is present
+                    status.is = 'incomplete'
+                    return
+                }
+
+                cache.data[key] = cache.config.sanitize(value)
+                return next(cache.data[key])
             }, parameter, context, status)
         }
     }
@@ -91,12 +100,19 @@ export const createCache: CreateCacheFn = <From, To>(config?: Partial<CacheConfi
     //     }
     // }
 
-
-    return {
-        ...cache,
-        use: useCache,
-        // hit: hitCache,
+    const wipe = () => {
+        cache.data = {}
     }
+
+    Object.assign(cache, {
+        wipe,
+        $: {
+            use: useCache,
+            // hit: hitCache,
+        }
+    })
+
+    return cache as CacheObject<From, To>
 }
 
 // @ts-ignore

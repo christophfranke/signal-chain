@@ -19,7 +19,7 @@ describe('cache', () => {
             //     )
             // ),
             $.await.latest(
-                cache.use(
+                cache.$.use(
                     $.chain(
                         $.select(n => n % 2 === 0 ? Promise.resolve(n*n) : Promise.reject()),
                         $.log('add to cache'),
