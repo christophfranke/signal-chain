@@ -4,18 +4,26 @@ import { describe, it } from 'vitest'
 describe('cache', () => {
     it('should cache items', async () => {
         const cache = $.cache.create({
-            key: (n: number) => `${n}`,
+            key: n => `${n}`,
         })
+        // const cache = $.cache.create()
         const input = $.primitive.create(0, { update: 'sync' })
 
         $.connect(
             input.listen,
             $.log('input'),
+            // cache.hit(
+            //     $.chain(
+            //         $.select(x => 'jo'),
+            //         $.log('hit')
+            //     )
+            // ),
             $.await.latest(
                 cache.use(
                     $.chain(
                         $.select(n => n % 2 === 0 ? Promise.resolve(n*n) : Promise.reject()),
                         $.log('add to cache'),
+                        $.then(n => `${n}`),
                     ),
                 )
             ),

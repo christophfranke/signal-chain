@@ -16,6 +16,11 @@ export interface UseFn<CacheFrom, CacheTo> {
     <V1 extends CacheFrom, V2 extends CacheTo>(listen: AsyncWeakChain<V1, V2>): AsyncWeakChain<V1, V2>
 }
 
+// export interface HitFn<CacheFrom, CacheTo> {
+//     <V1 extends CacheFrom, V2 extends CacheTo>(listen: SyncChain<V2, V1>): SyncChain<V1>
+//     <V1 extends CacheFrom, V2 extends CacheTo, V3 = V1>(listen: SyncChain<V2, V3>): SyncChain<V1, V1 | V3>
+// }
+
 export type CacheConfig<From, To> = {
     key: Function1<From, string>
     isValid: Function1<To, boolean>
@@ -27,9 +32,16 @@ export type CacheObject<From = string, To = unknown> = {
     config: CacheConfig<From, To>
     data: Record<string, To>
     use: UseFn<From, To>
+    // hit: HitFn<From, To>
 }
 
-export const createCache = <From, To>(config?: Partial<CacheConfig<From, To>>, data?: Record<string, To>): CacheObject<From, To> => {
+export interface CreateCacheFn {
+    <From = unknown, To = unknown>(config: Partial<CacheConfig<From, To>> & { key: Function1<From, string> }, data?: Record<string, To>): CacheObject<From, To>
+    <To>(config?: Partial<CacheConfig<string, To>>, data?: Record<string, To>): CacheObject<string, To>
+    // <From extends string, To>(config?: Partial<CacheConfig<From, To>>, data?: Record<string, To>): CacheObject<string, To>
+}
+
+export const createCache: CreateCacheFn = <From, To>(config?: Partial<CacheConfig<From, To>>, data?: Record<string, To>): CacheObject<From, To> => {
     const resultConfig = config ?? {}
 
     // TODO: static constraint that From = string when no key function given
@@ -65,9 +77,25 @@ export const createCache = <From, To>(config?: Partial<CacheConfig<From, To>>, d
         }
     }
 
+    // @ts-ignore
+    // const hitCache: HitFn<From, To> = (listen: Chain<To, To>): Chain<From, From | To> => {
+    //     return (next: NextFn<From | To>, parameter: From, context: Context, status: any) => {
+    //         const key = cache.config.key(parameter)
+    //         if (key in cache.data) {
+    //             return listen((value: To) => {
+    //                 return next(value)
+    //             }, cache.data[key], context, status)
+    //         }
+
+    //         return next(parameter)
+    //     }
+    // }
+
+
     return {
         ...cache,
-        use: useCache
+        use: useCache,
+        // hit: hitCache,
     }
 }
 
