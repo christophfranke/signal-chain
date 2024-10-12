@@ -3,7 +3,7 @@ import { describe, it } from 'vitest'
 
 describe('cache', () => {
     it('should cache items', async () => {
-        const cache = $.cache.create({
+        const myCache = $.cache.create<number, Promise<string>>({
             key: n => `${n}`,
         })
         // const cache = $.cache.create()
@@ -12,14 +12,19 @@ describe('cache', () => {
         $.connect(
             input.listen,
             $.log('input'),
-            // cache.hit(
-            //     $.chain(
-            //         $.select(x => 'jo'),
-            //         $.log('hit')
-            //     )
-            // ),
+            myCache.$.hit(
+                $.chain(
+                    $.await.parallel(
+                        $.select<Promise<string>>(),
+                        $.log('hit'),
+                    ),
+                    $.error.stop(),
+                    $.select(x => Math.sqrt(parseInt(x))),
+                    $.log('from cache hit'),
+                )
+            ),
             $.await.latest(
-                cache.$.use(
+                myCache.$.use(
                     $.chain(
                         $.select(n => n % 2 === 0 ? Promise.resolve(n*n) : Promise.reject()),
                         $.log('add to cache'),
@@ -41,6 +46,6 @@ describe('cache', () => {
         input.value = 2
         await Promise.resolve()
 
-        console.log(cache.data)
+        console.log(myCache.data)
     })
 })

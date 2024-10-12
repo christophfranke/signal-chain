@@ -16,10 +16,12 @@ export interface UseFn<CacheFrom, CacheTo> {
     <V1 extends CacheFrom, V2 extends CacheTo>(listen: AsyncWeakChain<V1, V2>): AsyncWeakChain<V1, V2>
 }
 
-// export interface HitFn<CacheFrom, CacheTo> {
-//     <V1 extends CacheFrom, V2 extends CacheTo>(listen: SyncChain<V2, V1>): SyncChain<V1>
-//     <V1 extends CacheFrom, V2 extends CacheTo, V3 = V1>(listen: SyncChain<V2, V3>): SyncChain<V1, V1 | V3>
-// }
+export interface HitFn<CacheFrom, CacheTo> {
+    <V1 extends CacheFrom, V2 extends CacheTo, V3 = V1>(listen: SyncChain<V2, V3>): SyncChain<V1, V1 | V3>
+    <V1 extends CacheFrom, V2 extends CacheTo, V3 = V1>(listen: AsyncChain<V2, V3>): AsyncChain<V1, V1 | V3>
+    <V1 extends CacheFrom, V2 extends CacheTo, V3 = V1>(listen: WeakChain<V2, V3>): WeakChain<V1, V1 | V3>
+    <V1 extends CacheFrom, V2 extends CacheTo, V3 = V1>(listen: AsyncWeakChain<V2, V3>): AsyncWeakChain<V1, V1 | V3>
+}
 
 export type CacheConfig<From, To> = {
     key: Function1<From, string>
@@ -33,7 +35,7 @@ export type CacheObject<From = string, To = unknown> = {
     data: Record<string, To>
     $: {
         use: UseFn<From, To>
-        // hit: HitFn<From, To>
+        hit: HitFn<From, To>
     }
 }
 
@@ -87,18 +89,18 @@ export const createCache: CreateCacheFn = <From, To>(config?: Partial<CacheConfi
     }
 
     // @ts-ignore
-    // const hitCache: HitFn<From, To> = (listen: Chain<To, To>): Chain<From, From | To> => {
-    //     return (next: NextFn<From | To>, parameter: From, context: Context, status: any) => {
-    //         const key = cache.config.key(parameter)
-    //         if (key in cache.data) {
-    //             return listen((value: To) => {
-    //                 return next(value)
-    //             }, cache.data[key], context, status)
-    //         }
+    const hitCache: HitFn<From, To> = (listen: Chain<To, To>): Chain<From, From | To> => {
+        return (next: NextFn<From | To>, parameter: From, context: Context, status: any) => {
+            const key = cache.config.key(parameter)
+            if (key in cache.data) {
+                return listen((value: To) => {
+                    return next(value)
+                }, cache.data[key], context, status)
+            }
 
-    //         return next(parameter)
-    //     }
-    // }
+            return next(parameter)
+        }
+    }
 
     const wipe = () => {
         cache.data = {}
@@ -108,7 +110,7 @@ export const createCache: CreateCacheFn = <From, To>(config?: Partial<CacheConfi
         wipe,
         $: {
             use: useCache,
-            // hit: hitCache,
+            hit: hitCache,
         }
     })
 

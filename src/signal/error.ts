@@ -18,8 +18,8 @@ export const discardError: DiscardErrorFunction = <V1>(): Chain<V1, Exclude<V1, 
 }
 
 export interface StopOnErrorFunction {
-    <V1>(): WeakChain<V1, Exclude<V1 | undefined, Error>>
-    <V1>(): AsyncWeakChain<V1, Exclude<V1 | undefined, Error>>
+    <V1>(): WeakChain<V1, Exclude<V1, Error>>
+    <V1>(): AsyncWeakChain<V1, Exclude<V1, Error>>
 }
 
 export const stopOnError: StopOnErrorFunction = <V1>(): Chain<V1, Exclude<V1, Error>> => {
