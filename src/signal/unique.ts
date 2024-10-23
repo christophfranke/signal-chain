@@ -1,11 +1,11 @@
 import { ChainCall, chain } from "./chain"
-import type { Chain, SyncChain, NextFn, CleanupExec } from "./types"
+import type { Chain, WeakChain, NextFn, CleanupExec } from "./types"
 import { execute } from "./util"
 
 /**
  * Passes the value if it is different from the last value
  */
-export function passUnique<V>(): SyncChain<V> {
+export function passUnique<V>(): WeakChain<V> {
   return (next: NextFn<V>, parameter: V, context, status: any) => {
     if (context.last !== parameter) {
       context.last = parameter
@@ -24,7 +24,7 @@ export function passUnique<V>(): SyncChain<V> {
   }
 }
 
-export function selectUnique<V, U>(mapping: (value: V) => U): SyncChain<V, U> {
+export function selectUnique<V, U>(mapping: (value: V) => U): WeakChain<V, U> {
   return (next: NextFn<U>, parameter: V, context, status: any) => {
     const mappedValue = mapping(parameter)
     if (context.last !== mappedValue) {
