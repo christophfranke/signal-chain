@@ -5,6 +5,7 @@ describe('cache', () => {
     it('should cache items', async () => {
         const myCache = $.cache.create<number, Promise<string>>({
             key: n => `${n}`,
+            // isValid: () => true,
         })
         // const cache = $.cache.create()
         const input = $.primitive.create(0, { update: 'sync' })
