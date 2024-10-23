@@ -16,7 +16,7 @@ import { connect } from './signal/connect'
 import { evaluate, toFunction, toComputed } from './signal/evaluate'
 import { listenToEvent } from './signal/event'
 import { merge } from './signal/merge'
-import { createCache, useCache } from './signal/cache'
+import { createCache } from './signal/cache'
 import { panicOnError, discardError, logError, stopOnError } from './signal/error'
 import { assert as createAssert,
   assertNot as createAssertNot,
@@ -118,7 +118,6 @@ const errorFns = {
 
 const cache = {
   create: createCache,
-  use: useCache,
 }
 
 export default {
